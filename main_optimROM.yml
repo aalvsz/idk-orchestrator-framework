@@ -1,0 +1,74 @@
+model:
+  aplication: idkROM             # Indicamos que usaremos el ROM
+  pathAplication: []          # Si no es necesario, se puede dejar vacío
+  pathModel: rom.pkl   # Ruta al archivo que contiene el ROM
+
+analysis:
+  type: optimization
+  params:
+    algorithm: NSGA2      # Se usará la rama de optimización con ROM
+    popSize: 50               # Tamaño de la población
+    nGen: 100                 # Número de generaciones
+    variables: [P1, P2, P3, P4, P5]   # Variables de decisión (inputs del ROM)
+    fObj: [fObj1, fObj2]  # Objetivos a optimizar
+    tracking:
+      path: "main/opt"
+      saveData: True
+
+simulation:
+  parallel: False
+
+
+P1:                       
+  name: l_r_i
+  default: 0.87 # mean
+  type: continuo             
+  value: [0.87]
+  value interval: [0.3, 1.5]
+  description: longitud del radio interior de la pieza
+
+P2:                       
+  name: l_r_e
+  default: 0.84 # mean
+  type: continuo             
+  value: [0.84]
+  value interval: [0.25, 1.48]
+  description: longitud del radio exterior de la pieza
+
+P3:                       
+  name: n_nerv_ang
+  default: 16.0 # mean
+  type: discreto             
+  value: [16.0]
+  value interval: [10, 22]
+  description: número de nervios angulares de la pieza
+
+P4:                       
+  name: esp_nerv_ang
+  default: 0.039 # mean
+  type: continuo             
+  value: [0.039]
+  value interval: [0.016, 0.063]
+  description: espesor de los nervios angulares de la pieza
+
+P5:                       
+  name: esp_base_pad
+  default: 0.078 # mean
+  type: continuo             
+  value: [0.078]
+  value interval: [0.040, 0.119]
+  description: espesor de la base del pad de la pieza
+
+fObj1:                        
+  name: CO2_emission
+  type: results
+  tag: 
+  function: minimizar
+  description: Minimizar emisiones de CO2
+
+fObj2:                       
+  name: Elastic_energy
+  type: results
+  tag: 
+  function: minimizar
+  description: Maximizar la energía elástica
