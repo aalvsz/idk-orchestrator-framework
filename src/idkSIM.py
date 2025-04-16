@@ -11,10 +11,14 @@ import sys
 #sys.path.append('D:/idk-Suite/venvs/Lib/site-packages')
 sys.path.append('D:/idk_framework')
 sys.path.append('D:/idk_framework/idkROM')
-from idkopt.algorithms.genetic_algorithm import genalg
-from src.model.idkrom_model import model
-from src.post.plot_pareto import plot_pareto_and_dominated,print_optimization_summary
+from idkopt.algorithms.genetic_algorithm import GeneticAlgorithm
+from idkopt.algorithms.minimize import Minimization
+from idkopt.algorithms.least_squares import LeastSquares
 
+from src.idkrom_model import idksimObject
+from src.postprocessing import plot_pareto_and_dominated, print_optimization_summary, write_results_file
+from src.parameters import Parameter
+from src.outputs import Output
 
 # =============================================================================
 # Función principal runIdkSIM: Define la secuencia de la simulación/optimización
@@ -25,19 +29,21 @@ def runIdkSIM(pathMain: str):
     Recibe como entrada el path del archivo YAML principal y ejecuta la
     optimización usando un ROM y el algoritmo NSGA2.
     """
+    problem = None
     # Leer archivo YAML principal
     with open(pathMain, 'r') as file:
         data = yaml.safe_load(file)
     
     # Inicializar la clase model y asignar rutas
-    objModel = model()
+    objModel = idksimObject()
     objModel.pathAplication = data['model']['pathAplication']
     objModel.pathModel = data['model']['pathModel']
-    # Se cargará el ROM en la primera llamada a idk_run
     
     # Verificar el tipo de análisis y algoritmo especificado
     if data['analysis']['type'] == 'optimization':
+
         if data['analysis']['params']['algorithm'] == 'NSGA2':
+
             # Inicializar el algoritmo NSGA2 para el problema
             algorithm = NSGA2(
             pop_size=data['analysis']['params']['popSize'],
@@ -47,26 +53,7 @@ def runIdkSIM(pathMain: str):
             )
             
             # Inicializar el problema de optimización definido en la clase opt_genalg
-            problem = genalg(data, objModel, algorithm)
-            
-            # Definir el nombre del archivo de resultados
-            savefileName = os.path.join(data['analysis']['params']['tracking']['path'],
-                                         os.path.basename(data['model']['pathModel']).replace('.pkl', '_NSGA2_Results.csv'))
-            
-            # Si existe el archivo, lo borramos para evitar sobreescritura
-            if os.path.isfile(savefileName):
-                os.remove(savefileName)
-            
-            # Escribir la cabecera de resultados (nombres de variables y objetivos)
-            ParamObjList = ''
-            # Variables de decisión
-            for key in data['analysis']['params']['variables']:
-                ParamObjList += data[key]['name'] + ', '
-            # Objetivos
-            for key in data['analysis']['params']['fObj']:
-                ParamObjList += data[key]['name'] + ', '
-            with open(savefileName, 'w') as file:
-                file.write(ParamObjList + '\n')
+            problem = GeneticAlgorithm(data, objModel, algorithm, Parameter, Output)
             
             # Ejecutar la optimización utilizando la función minimize de pymoo
             res = minimize(problem,
@@ -76,5 +63,28 @@ def runIdkSIM(pathMain: str):
                            verbose=True,
                            save_history=True)
             
-        print_optimization_summary(res)
-        plot_pareto_and_dominated(res)
+
+        elif data['analysis']['params']['algorithm'] == 'minimize':
+
+            
+            # Ejemplo de uso (suponiendo que 'data', 'objModel', 'Parameter' y 'Output' están definidos):
+             try:
+                 problem = Minimization(data, objModel, Parameter, Output)
+                 resultado = problem.solve()
+             except ValueError as e:
+                 print(e)
+
+
+
+        elif data['analysis']['params']['algorithm'] == 'least squares':
+
+            try:
+                problem = LeastSquares(data, objModel, Parameter, Output)
+                resultado = problem.solve()
+            except ValueError as e:
+                print("Error:", e)
+
+            
+    print_optimization_summary(problem, res)
+    plot_pareto_and_dominated(res)
+    write_results_file(data, res)

@@ -1,0 +1,91 @@
+model:
+  aplication: idkROM             # Indicamos que usaremos el ROM
+  pathAplication: []          # Si no es necesario, se puede dejar vacío
+  pathModel: idkROM_model.pkl   # Ruta al archivo que contiene el ROM
+
+analysis:
+  type: optimization
+  params:
+    algorithm: NSGA2      # Se usará la rama de optimización con ROM
+    popSize: 3               # Tamaño de la población
+    nGen: 2                 # Número de generaciones
+    variables: [P1, P2, P3, P4, P5]   # Variables de decisión (inputs del ROM)
+    fObj: [fObj1, fObj2]  # Objetivos a optimizar
+    tracking:
+      path: "main/opt"
+      saveData: True
+
+
+  #type: optimization
+  #params:
+  #  algorithm: minimize      # Se usará la rama de optimización con ROM
+  #  method: Nelder-Mead      # Método de optimización
+  #  stopping_criteria:
+  #    max_iter: 100
+  #    tol: 1e-5
+  #  variables: [P1, P2, P3, P4, P5]   # Variables de decisión (inputs del ROM)
+  #  fObj: [fObj1, fObj2]  # Objetivos a optimizar
+  #  weights: [0.5, 0.5] # Pesos de los objetivos respectivamente
+  #  tracking:
+  #    path: "main/opt"
+  #    saveData: True
+
+
+simulation:
+  parallel: False
+
+
+P1:                       
+  name: n_capas
+  default: 2 # mean
+  type: discreto             
+  value: [2]
+  value interval: [1, 2, 3, 5, 8, 10]
+  description: número de capas de la red neuronal
+
+P2:                       
+  name: n_neuronas
+  default: 10 # mean
+  type: discreto             
+  value: [10]
+  value interval: [4, 8, 10, 15, 20]
+  description: número de neuronas de la red neuronal
+
+P3:                       
+  name: lr
+  default: 0.01 # mean
+  type: discreto 
+  value: [0.01]
+  value interval: [0.1, 0.01, 0.001, 0.0001]
+  description: tasa de aprendizaje de la red neuronal
+
+P4:                       
+  name: epochs
+  default: 500 # mean
+  type: discreto             
+  value: [500]
+  value interval: [500, 1000]
+  description: número de épocas
+
+P5:                       
+  name: patience
+  default: 500 # mean
+  type: discreto             
+  value: [500]
+  value interval: [500, 1000]
+  description: número de épocas a partir de las cuales se para la iteración con la condición de que la convergencia haya alcanzado un threshold definido.
+
+fObj1:                        
+  name: metric
+  type: results
+  tag: 
+  function: minimizar
+  description: Minimizar el error medio cuadrático en escala normalizada.
+
+fObj2:
+  name: epochs
+  type: variables
+  tag: 
+  function: minimizar
+  description: Minimizar el número de épocas (input del modelo).
+

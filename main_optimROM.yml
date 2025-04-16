@@ -1,7 +1,8 @@
 model:
   aplication: idkROM             # Indicamos que usaremos el ROM
   pathAplication: []          # Si no es necesario, se puede dejar vacío
-  pathModel: rom.pkl   # Ruta al archivo que contiene el ROM
+  pathModel: NN_rom_model.pkl   # Ruta al archivo que contiene el ROM
+  goal: prediction
 
 analysis:
   type: optimization

@@ -1,7 +1,32 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 from pymoo.core.result import Result
-from mpl_toolkits.mplot3d import Axes3D
+
+def write_results_file(data, res):
+    import os
+
+    savefileName = os.path.join(
+        data['analysis']['params']['tracking']['path'],
+        os.path.basename(data['model']['pathModel']).replace('.pkl', '_NSGA2_Results.csv')
+    )
+
+    if os.path.isfile(savefileName):
+        os.remove(savefileName)
+
+    with open(savefileName, 'w') as file:
+        for i, x_dict in enumerate(res.X):
+            file.write(f"--- Solución {i+1} ---\n")
+            for k, v in x_dict.items():
+                file.write(f"{k}: {v}\n")
+            file.write("Objetivos:\n")
+            for j, fval in enumerate(res.F[i]):
+                file.write(f"f{j}: {fval}\n")
+            file.write("\n")
+
+    return 0
+
+
 
 def is_dominated_by_pareto(f, pareto_set):
     """
@@ -31,7 +56,26 @@ def plot_pareto_and_dominated(results: Result, save_path: str = "pareto_dominanc
     F_dominated = F_all[is_dominated]
 
     # Visualizar
-    if F_pareto.shape[1] == 2:
+    # Si es 1D, asume que hay un único objetivo.
+    if F_pareto.ndim == 1:
+        num_obj = 1
+    else:
+        num_obj = F_pareto.shape[1]
+
+    if num_obj == 1:
+        # Visualización para 1 objetivo
+        plt.figure(figsize=(8,6))
+        plt.scatter(range(len(F_pareto)), F_pareto, c='red', label='Frontera de Pareto')
+        plt.xlabel("Individuo")
+        plt.ylabel("Objetivo (MSE)")
+        plt.title("Frente de Pareto (1 objetivo)")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(save_path, dpi=300)
+        plt.show()
+
+    if num_obj == 2:
         plt.figure(figsize=(8,6))
         if len(F_dominated) > 0:
             plt.scatter(F_dominated[:, 0], F_dominated[:, 1], c='gray', s=20, label='Dominadas')
@@ -45,7 +89,7 @@ def plot_pareto_and_dominated(results: Result, save_path: str = "pareto_dominanc
         plt.savefig(save_path, dpi=300)
         plt.show()
 
-    elif F_pareto.shape[1] == 3:
+    elif num_obj == 3:
         fig = plt.figure(figsize=(8,6))
         ax = fig.add_subplot(111, projection='3d')
         if len(F_dominated) > 0:
@@ -61,21 +105,19 @@ def plot_pareto_and_dominated(results: Result, save_path: str = "pareto_dominanc
         plt.show()
 
     else:
-        print(f"No se soporta la visualización para {F_pareto.shape[1]} objetivos.")
+        print(f"No se soporta la visualización para {F_pareto.ndim} objetivos.")
 
     return 0
 
+def print_optimization_summary(problem, results):
+    """
+    Imprime un resumen de la optimización.
+    """
+    import numpy as np
 
-def print_optimization_summary(results: Result):
-    """
-    Imprime un resumen de la optimización:
-    - Generaciones
-    - Número total de individuos evaluados
-    - Soluciones de Pareto con variables de decisión X y objetivos F
-    """
     print("\n🔎 RESUMEN DE LA OPTIMIZACIÓN")
     print("-" * 50)
-    
+
     n_generations = len(results.history)
     print(f"🧬 Generaciones totales: {n_generations}")
 
@@ -83,18 +125,30 @@ def print_optimization_summary(results: Result):
     total_individuals = sum(pop_per_gen)
     print(f"👥 Individuos evaluados (en total): {total_individuals}")
 
-    pareto_front = results.F
-    print(f"🏁 Soluciones en el frente de Pareto: {len(pareto_front)}")
+    F_pareto = results.F
+    X_pareto = results.X
+
+    # Asegurar forma consistente
+    if isinstance(X_pareto, np.ndarray) and X_pareto.dtype == "O":
+        X_pareto = X_pareto.tolist()
+
+    if np.ndim(F_pareto) == 1:
+        F_pareto = F_pareto.reshape(1, -1)
+        X_pareto = [X_pareto]  # convertir en lista de un único dict
+
+    print(f"🏁 Soluciones en el frente de Pareto: {len(F_pareto)}")
 
     print("\n📌 Soluciones de Pareto:")
-    for i, (x, f) in enumerate(zip(results.X, results.F)):
-        x_dict = x if isinstance(x, dict) else {f"x{i}": val for i, val in enumerate(x)}
-        print(f"\n--- Solución {i+1} ---")
+    for i in range(len(F_pareto)):
+        print(f"\n--- Solución {i + 1} ---")
+
         print("Variables de decisión (X):")
-        for k, v in x_dict.items():
-            print(f"  {k}: {v}")
+        for name, value in X_pareto[i].items():
+            print(f"  {name}: {value}")
+
         print("Objetivos (F):")
-        for j, val in enumerate(f):
-            print(f"  f{j+1}: {val}")
+        for j, obj_value in enumerate(F_pareto[i]):
+            obj_name = getattr(problem, "obj_names", [f"f{j}" for j in range(len(F_pareto[i]))])[j]
+            print(f"  {obj_name}: {obj_value}")
 
     return 0

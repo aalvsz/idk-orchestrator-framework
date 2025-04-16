@@ -1,1 +1,6 @@
-l_r_i, l_r_e, n_nerv_ang, esp_nerv_ang, esp_base_pad, CO2_emission, Elastic_energy, 
+n_capas: 6
+n_neuronas: 19
+epochs: 901
+patience: 326
+lr: 0.0001
+0.013157067695507164

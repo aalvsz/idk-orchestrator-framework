@@ -1,0 +1,20 @@
+--- Solución 1 ---
+n_capas: 10
+n_neuronas: 4
+lr: 0.01
+epochs: 500
+patience: 1000
+Objetivos:
+f0: 0.050973192538891876
+f1: 500.0
+
+--- Solución 2 ---
+n_capas: 1
+n_neuronas: 4
+lr: 0.01
+epochs: 1000
+patience: 1000
+Objetivos:
+f0: 0.007039519889336724
+f1: 1000.0
+
