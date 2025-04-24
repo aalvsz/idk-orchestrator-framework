@@ -45,14 +45,36 @@ analysis:
 
     # Aquí se definen las restricciones
     constraints:
-      # 1) Límites (bounds) para cada variable de diseño, en el mismo orden
-      #    en que aparecen en `variables:`. Cada par [min, max].
       bounds:
-        - [0.0, 1.0]    # E  (ejemplo: módulo de Young en escala [0,1])
-        - [0.0, 1.0]    # mu
-        - [0.2, 0.8]    # ro
-        - [0.1, 0.9]    # k
-        # … tantas filas como variables tengas …
+        - [125e9, 200e9]   # E
+        - [0.2, 0.35]      # mu
+        - [7000, 8000]     # ro
+        - [40, 50]         # k
+        - [400, 600]       # c
+        - [1e-6, 2e-5]     # a
+        - [0.01, 0.1]      # mesh_size
+        - [10, 15]        # L
+        - [1.0, 2.0]      # b
+        - [1.0, 2.0]      # h
+        - [0.03,0.1]      # t_frontal
+        - [0.03,0.1]      # t_posterior
+        - [0.03,0.1]      # t_origen
+        - [0.03,0.1]      # t_final
+        - [0.02,0.08]     # t_centro_sup
+        - [0.02,0.08]     # t_centro_inf
+        - [0.1,0.3]       # t_lat_sup
+        - [0.1,0.3]       # t_lat_inf
+        - [0.02,0.06]     # t_nervios_long
+        - [0.02,0.06]     # t_nervios_transv
+        - [0.5, 1.0]      # prctg_ventana_horizontal
+        - [0.5, 1.0]      # prctg_ventana_vertical
+        - [0.1, 0.4]      # diam_ventana
+        - [0.4, 0.8]      # diam_agujero
+        - [0.5, 1.5]      # L_apoyo
+        - [15, 25]        # T_amb
+        - [5, 15]         # h_conv
+        - [0, 20000]      # F
+        - [0, 200]        # Q
 
       # 2) Restricciones personalizadas (custom): cada una con
       #    - type: 'ineq' para g(x) ≥ 0, o 'eq' para g(x) = 0
