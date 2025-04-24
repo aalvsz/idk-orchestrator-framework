@@ -1,0 +1,332 @@
+################################################ MODEL SETTINGS ############################################################################
+model:
+  aplication: idkFEM             # Indicamos que usaremos el ROM
+  pathAplication: []          # Si no es necesario, se puede dejar vacío
+  pathModel: obj_Travesano_academic_st_transient.pkl   # Ruta al archivo que contiene el ROM
+
+
+################################################ ANALYSIS SETTINGS ############################################################################
+analysis:
+  type: optimization
+
+  params:
+    seed: 15
+    algorithm: minimize      # Se usará la rama de optimización con ROM
+    method: Nelder-Mead      # Método de optimización
+    nStarts: 2
+    stopping_criteria:
+      max_iter_by_single_start: 2 # total number of iterations for the optimization process is this*nStarts
+      max_iter_without_improvement: 5
+      improvement_tolerance: 1e-4
+      epsilon: 1e-2
+      ftol: 1e-4
+      gtol: 1e-4
+      disp: False
+
+    variables:
+      [
+        E, mu, ro, k, c, a,
+        mesh_size,
+        L, b, h,
+        t_frontal, t_posterior, t_origen, t_final,
+        t_centro_sup, t_centro_inf,
+        t_lat_sup, t_lat_inf,
+        t_nervios_long,
+        t_nervios_transv,
+        prctg_ventana_horizontal, prctg_ventana_vertical,
+        diam_ventana, diam_agujero,
+        L_apoyo,
+        T_amb, h_conv,
+        F, Q
+      ]
+
+    fObj: [fObj1, fObj2, fObj3]
+    weights: None # [0.3, 0.5, 0.2] o None para un peso de 1 a todos los objetivos
+
+    # Aquí se definen las restricciones
+    constraints:
+      # 1) Límites (bounds) para cada variable de diseño, en el mismo orden
+      #    en que aparecen en `variables:`. Cada par [min, max].
+      bounds:
+        - [0.0, 1.0]    # E  (ejemplo: módulo de Young en escala [0,1])
+        - [0.0, 1.0]    # mu
+        - [0.2, 0.8]    # ro
+        - [0.1, 0.9]    # k
+        # … tantas filas como variables tengas …
+
+      # 2) Restricciones personalizadas (custom): cada una con
+      #    - type: 'ineq' para g(x) ≥ 0, o 'eq' para g(x) = 0
+      #    - expression: cualquier función de x en Python (vector numpy)
+      custom:
+        # Ejemplo A: suma de espesores ≤ 0.5 (en el espacio escalado)
+        - type: ineq
+          expression: "0.5 - (x[10] + x[11] + x[12] + x[13])"
+        # Ejemplo B: relación entre espesores frontales y posteriores exacta
+        - type: eq
+          expression: "x[10] - x[11]"
+
+
+    calculation:
+      parallel: False
+      nJobs: 5
+
+    tracking:
+      path: "results/minimization"
+      saveData: True
+
+################################################ VARIABLE DEFINITION ############################################################################
+E:
+  name: E
+  default: 125e9
+  type: continuo
+  value: [125e9]
+  value interval: [112.5e9, 137.5e9]
+  description: Módulo de Young (N/m²)
+
+mu:
+  name: mu
+  default: 0.3
+  type: continuo
+  value: [0.3]
+  value interval: [0.27, 0.33]
+  description: Coeficiente de Poisson (-)
+
+ro:
+  name: ro
+  default: 7250
+  type: continuo
+  value: [7250]
+  value interval: [6525, 7975]
+  description: Densidad (kg/m³)
+
+k:
+  name: k
+  default: 45
+  type: continuo
+  value: [45]
+  value interval: [40.5, 49.5]
+  description: Conductividad térmica (W/m·K)
+
+c:
+  name: c
+  default: 460
+  type: continuo
+  value: [460]
+  value interval: [414, 506]
+  description: Calor específico (J/kg·K)
+
+a:
+  name: a
+  default: 11.72e-6
+  type: continuo
+  value: [11.72e-6]
+  value interval: [10.548e-6, 12.892e-6]
+  description: Coeficiente de dilatación térmica (1/K)
+
+mesh_size:
+  name: mesh_size
+  default: 0.06
+  type: continuo
+  value: [0.06]
+  value interval: [0.054, 0.066]
+  description: Tamaño de malla (m)
+
+L:
+  name: L
+  default: 11750.0e-3
+  type: continuo
+  value: [11750.0e-3]
+  value interval: [10575e-3, 12925e-3]
+  description: Largo total (m)
+
+b:
+  name: b
+  default: 1420.0e-3
+  type: continuo
+  value: [1420.0e-3]
+  value interval: [1278e-3, 1562e-3]
+  description: Ancho total (m)
+
+h:
+  name: h
+  default: 1500.0e-3
+  type: continuo
+  value: [1500.0e-3]
+  value interval: [1350e-3, 1650e-3]
+  description: Alto total (m)
+
+t_frontal:
+  name: t_frontal
+  default: 60.0e-3
+  type: continuo
+  value: [60.0e-3]
+  value interval: [54.0e-3, 66.0e-3]
+  description: Espesor pared frontal (m)
+
+t_posterior:
+  name: t_posterior
+  default: 60.0e-3
+  type: continuo
+  value: [60.0e-3]
+  value interval: [54.0e-3, 66.0e-3]
+  description: Espesor pared posterior (m)
+
+t_origen:
+  name: t_origen
+  default: 60.0e-3
+  type: continuo
+  value: [60.0e-3]
+  value interval: [54.0e-3, 66.0e-3]
+  description: Espesor pared origen (m)
+
+t_final:
+  name: t_final
+  default: 60.0e-3
+  type: continuo
+  value: [60.0e-3]
+  value interval: [54.0e-3, 66.0e-3]
+  description: Espesor pared final (m)
+
+t_centro_sup:
+  name: t_centro_sup
+  default: 40.0e-3
+  type: continuo
+  value: [40.0e-3]
+  value interval: [36.0e-3, 44.0e-3]
+  description: Espesor centro superior (m)
+
+t_centro_inf:
+  name: t_centro_inf
+  default: 40.0e-3
+  type: continuo
+  value: [40.0e-3]
+  value interval: [36.0e-3, 44.0e-3]
+  description: Espesor centro inferior (m)
+
+t_lat_sup:
+  name: t_lat_sup
+  default: 220.0e-3
+  type: continuo
+  value: [220.0e-3]
+  value interval: [198.0e-3, 242.0e-3]
+  description: Espesor lateral superior (m)
+
+t_lat_inf:
+  name: t_lat_inf
+  default: 220.0e-3
+  type: continuo
+  value: [220.0e-3]
+  value interval: [198.0e-3, 242.0e-3]
+  description: Espesor lateral inferior (m)
+
+t_nervios_long:
+  name: t_nervios_long
+  default: 40.0e-3
+  type: continuo
+  value: [40.0e-3]
+  value interval: [36.0e-3, 44.0e-3]
+  description: Espesor nervios longitudinales (m)
+
+t_nervios_transv:
+  name: t_nervios_transv
+  default: 30.0e-3
+  type: continuo
+  value: [30.0e-3]
+  value interval: [27.0e-3, 33.0e-3]
+  description: Espesor nervios transversales (m)
+
+prctg_ventana_horizontal:
+  name: prctg_ventana_horizontal
+  default: 0.85
+  type: continuo
+  value: [0.85]
+  value interval: [0.76, 0.94]
+  description: apertura horizontal del travesaño
+
+prctg_ventana_vertical:
+  name: prctg_ventana_vertical
+  default: 0.85
+  type: continuo
+  value: [0.85]
+  value interval: [0.76, 0.94]
+  description: apertura vertical del travesaño
+
+diam_ventana:
+  name: diam_ventana
+  default: 300.0e-3
+  type: continuo
+  value: [300.0e-3]
+  value interval: [270.0e-3, 330.0e-3]
+  description: Diámetro de ventana (m)
+
+diam_agujero:
+  name: diam_agujero
+  default: 600.0e-3
+  type: continuo
+  value: [600.0e-3]
+  value interval: [540.0e-3, 660.0e-3]
+  description: Diámetro de agujero (m)
+
+L_apoyo:
+  name: L_apoyo
+  default: 1000.0e-3
+  type: continuo
+  value: [1000.0e-3]
+  value interval: [900.0e-3, 1100.0e-3]
+  description: Longitud del área de apoyo (m)
+
+T_amb:
+  name: T_amb
+  default: 21.0
+  type: continuo
+  value: [21.0]
+  value interval: [18.9, 23.1]
+  description: Temperatura ambiente (°C)
+
+h_conv:
+  name: h_conv
+  default: 10.0
+  type: continuo
+  value: [10.0]
+  value interval: [9.0, 11.0]
+  description: Coeficiente de convección (W/m·K)
+
+F:
+  name: F
+  default: 10000.0
+  type: continuo
+  value: [10000.0]
+  value interval: [9000.0, 11000.0]
+  description: Fuerza aplicada (N)
+
+Q:
+  name: Q
+  default: 100.0
+  type: continuo
+  value: [100.0]
+  value interval: [90.0, 110.0]
+  description: Calor aplicado (W)
+
+
+################################################ OUTPUT DEFINITION ############################################################################
+
+fObj1:
+  name: Peso
+  type: results
+  tag:
+  function: minimizar
+  description: Objetivo 1
+
+fObj2:
+  name: elastic_energy
+  type: results
+  tag:
+  function: minimizar
+  description: Objetivo 2
+
+fObj3:
+  name: CO2
+  type: results
+  tag:
+  function: minimizar
+  description: Objetivo 3

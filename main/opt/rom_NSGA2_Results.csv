@@ -1,6 +1,0 @@
-n_capas: 6
-n_neuronas: 19
-epochs: 901
-patience: 326
-lr: 0.0001
-0.013157067695507164

@@ -1,16 +1,14 @@
-import os
 import yaml
+import sys, os
 import plotly.io as pio
 pio.renderers.default = 'browser'
-
+from tqdm import tqdm
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.core.mixed import MixedVariableMating, MixedVariableSampling, MixedVariableDuplicateElimination
 from pymoo.optimize import minimize
-from pymoo.visualization.pcp import PCP
-import sys
-#sys.path.append('D:/idk-Suite/venvs/Lib/site-packages')
-sys.path.append('D:/idk_framework')
-sys.path.append('D:/idk_framework/idkROM')
+
+sys.path.insert(0, os.path.abspath(r"D:/idk_framework"))
+
 from idkopt.algorithms.genetic_algorithm import GeneticAlgorithm
 from idkopt.algorithms.minimize import Minimization
 from idkopt.algorithms.least_squares import LeastSquares
@@ -29,16 +27,26 @@ def runIdkSIM(pathMain: str):
     Recibe como entrada el path del archivo YAML principal y ejecuta la
     optimización usando un ROM y el algoritmo NSGA2.
     """
-    problem = None
-    # Leer archivo YAML principal
-    with open(pathMain, 'r') as file:
-        data = yaml.safe_load(file)
+    # 1) Leer el YAML
+    with open(pathMain, 'r') as f:
+        data = yaml.safe_load(f)
+
+    # 2) Construir listas de Parameter y Output
+    parameters = []
+    for key in data['analysis']['params']['variables']:
+        parameters.append(Parameter(data[key]))
+
+    outputs = []
+    for f_key in data['analysis']['params']['fObj']:
+        outputs.append(Output(data[f_key]))
     
     # Inicializar la clase model y asignar rutas
     objModel = idksimObject()
     objModel.pathAplication = data['model']['pathAplication']
     objModel.pathModel = data['model']['pathModel']
     
+    problem = None
+
     # Verificar el tipo de análisis y algoritmo especificado
     if data['analysis']['type'] == 'optimization':
 
@@ -53,38 +61,41 @@ def runIdkSIM(pathMain: str):
             )
             
             # Inicializar el problema de optimización definido en la clase opt_genalg
-            problem = GeneticAlgorithm(data, objModel, algorithm, Parameter, Output)
+            problem = GeneticAlgorithm(data, objModel, algorithm, parameters, outputs)
             
-            # Ejecutar la optimización utilizando la función minimize de pymoo
-            res = minimize(problem,
-                           algorithm,
-                           ('n_gen', data['analysis']['params']['nGen']),
-                           seed=1,
-                           verbose=True,
-                           save_history=True)
+            # Obtener el número total de generaciones del YAML
+            n_gen_total = data['analysis']['params']['nGen']
+            print(f"Iniciando optimización NSGA2 con {n_gen_total} generaciones...") # Mensaje inicial
+
+            # Usar tqdm en modo manual, con el total de generaciones
+            # La barra se inicializará a 0 y llegará al 100% cuando se actualice 'n_gen_total' veces.
+            with tqdm(total=n_gen_total, desc="Optimizando (Generaciones)") as pbar:
+
+                def pymoo_callback(algorithm):
+                    pbar.update(1) # Incrementa la barra en 1
+
+                # Ejecutar la optimización utilizando la función minimize de pymoo
+                res = minimize(problem,
+                                algorithm,
+                                ('n_gen', n_gen_total), # Usamos la variable n_gen_total aquí
+                                seed=2,
+                                verbose=False, # Desactivamos el verbose de pymoo
+                                save_history=True,
+                                callback=pymoo_callback) # <-- Pasamos nuestra función de callback
             
 
         elif data['analysis']['params']['algorithm'] == 'minimize':
 
-            
-            # Ejemplo de uso (suponiendo que 'data', 'objModel', 'Parameter' y 'Output' están definidos):
-             try:
-                 problem = Minimization(data, objModel, Parameter, Output)
-                 resultado = problem.solve()
-             except ValueError as e:
-                 print(e)
-
+            problem = Minimization(data, objModel, Parameter, Output)
+            res = problem.solve()
 
 
         elif data['analysis']['params']['algorithm'] == 'least squares':
 
-            try:
-                problem = LeastSquares(data, objModel, Parameter, Output)
-                resultado = problem.solve()
-            except ValueError as e:
-                print("Error:", e)
+            problem = LeastSquares(data, objModel, Parameter, Output)
+            res = problem.solve()
 
-            
-    print_optimization_summary(problem, res)
+
+    print_optimization_summary(res, parameters, outputs)
     plot_pareto_and_dominated(res)
-    write_results_file(data, res)
+    write_results_file(data, res, parameters, outputs)

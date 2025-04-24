@@ -1,9 +1,8 @@
 import os
-import sys
 import pickle
 
 # =============================================================================
-# Clase model: Encapsula el ROM, lo carga desde un pickle y define el método idk_run
+# Clase model: Encapsula el modelo, lo carga desde un pickle y define el método idk_run
 # =============================================================================
 class idksimObject:
     def __init__(self):
@@ -28,8 +27,9 @@ class idksimObject:
         """
         if self.model is None:
             self.load_model()
-
         result = self.model.idk_run(input_dict) # aqui entramos al metodo idk_run del modelo (.pkl)
-        
+
+        print(f"Modelo ejecutado con los parámetros: {input_dict}")
+        print(f"Resultado del modelo: {result}")
         return result
     

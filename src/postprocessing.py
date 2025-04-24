@@ -1,31 +1,106 @@
 import os
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+
 from pymoo.core.result import Result
 
-def write_results_file(data, res):
-    import os
-
-    savefileName = os.path.join(
+# Asumimos que 'parameters' es una lista de instancias de Parameter
+def write_results_file(data, res: Result, parameters: list, outputs: list):
+    """
+    Guarda en un archivo CSV los resultados de la optimización, usando las clases Parameter y Output
+    para obtener nombres y transformaciones de los objetivos.
+    """
+    # Construir nombre de archivo de resultados
+    savefile = os.path.join(
         data['analysis']['params']['tracking']['path'],
         os.path.basename(data['model']['pathModel']).replace('.pkl', '_NSGA2_Results.csv')
     )
 
-    if os.path.isfile(savefileName):
-        os.remove(savefileName)
+    # Si existe, eliminar para escribir de nuevo
+    if os.path.isfile(savefile):
+        os.remove(savefile)
 
-    with open(savefileName, 'w') as file:
-        for i, x_dict in enumerate(res.X):
-            file.write(f"--- Solución {i+1} ---\n")
-            for k, v in x_dict.items():
-                file.write(f"{k}: {v}\n")
-            file.write("Objetivos:\n")
-            for j, fval in enumerate(res.F[i]):
-                file.write(f"f{j}: {fval}\n")
-            file.write("\n")
+    with open(savefile, 'w') as f:
+        # Iterar soluciones
+        for i, x in enumerate(res.X):
+            f.write(f"--- Solución {i + 1} ---\n")
+
+            # Variables de decisión
+            if isinstance(x, dict):
+                # Caso dict con nombres
+                for name, val in x.items():
+                    f.write(f"{name}: {val}\n")
+            else:
+                # Asumimos array/list, usar parameters para nombres
+                for idx, param in enumerate(parameters):
+                    f.write(f"{param.name}: {x[idx]}\n")
+
+            f.write("Objetivos:\n")
+            # Objetivos y transformación
+            for j, raw_val in enumerate(res.F[i]):
+                out = outputs[j]
+                val = out.transform(raw_val)
+                f.write(f"{out.name}: {val}\n")
+
+            f.write("\n")
 
     return 0
 
+
+# Asumimos que 'parameters' y 'outputs' son listas de Parameter y Output respectivamente
+
+def print_optimization_summary(results: Result, parameters: list, outputs: list):
+    """
+    Imprime un resumen de la optimización, listando generaciones, número de individuos y soluciones de Pareto,
+    con nombres y transformaciones de parámetros y objetivos.
+    """
+    print("\n🔎 RESUMEN DE LA OPTIMIZACIÓN")
+    print("-" * 50)
+
+    # Generaciones
+    n_gen = len(results.history)
+    print(f"🧬 Generaciones totales: {n_gen}")
+
+    # Total individuos evaluados
+    total_inds = sum(len(algo.pop) for algo in results.history)
+    print(f"👥 Individuos evaluados (en total): {total_inds}")
+
+    # Frontera de Pareto
+    F_pareto = results.F
+    X_pareto = results.X
+
+    # Asegurar forma consistente
+    if isinstance(X_pareto, np.ndarray) and X_pareto.dtype == object:
+        X_pareto = X_pareto.tolist()
+
+    if np.ndim(F_pareto) == 1:
+        F_pareto = F_pareto.reshape(1, -1)
+        X_pareto = [X_pareto]
+
+    n_pareto = len(F_pareto)
+    print(f"🏁 Soluciones en el frente de Pareto: {n_pareto}")
+
+    # Mostrar soluciones
+    for i in range(n_pareto):
+        print(f"\n--- Solución {i + 1} ---")
+        # Decisiones
+        print("Variables de decisión (X):")
+        x = X_pareto[i]
+        if isinstance(x, dict):
+            for name, val in x.items():
+                print(f"  {name}: {val}")
+        else:
+            for idx, param in enumerate(parameters):
+                print(f"  {param.name}: {x[idx]}")
+
+        # Objetivos
+        print("Objetivos (F):")
+        for j, raw_val in enumerate(F_pareto[i]):
+            out = outputs[j]
+            val = out.transform(raw_val)
+            print(f"  {out.name}: {val}")
+
+    return 0
 
 
 def is_dominated_by_pareto(f, pareto_set):
@@ -109,46 +184,3 @@ def plot_pareto_and_dominated(results: Result, save_path: str = "pareto_dominanc
 
     return 0
 
-def print_optimization_summary(problem, results):
-    """
-    Imprime un resumen de la optimización.
-    """
-    import numpy as np
-
-    print("\n🔎 RESUMEN DE LA OPTIMIZACIÓN")
-    print("-" * 50)
-
-    n_generations = len(results.history)
-    print(f"🧬 Generaciones totales: {n_generations}")
-
-    pop_per_gen = [len(algo.pop) for algo in results.history]
-    total_individuals = sum(pop_per_gen)
-    print(f"👥 Individuos evaluados (en total): {total_individuals}")
-
-    F_pareto = results.F
-    X_pareto = results.X
-
-    # Asegurar forma consistente
-    if isinstance(X_pareto, np.ndarray) and X_pareto.dtype == "O":
-        X_pareto = X_pareto.tolist()
-
-    if np.ndim(F_pareto) == 1:
-        F_pareto = F_pareto.reshape(1, -1)
-        X_pareto = [X_pareto]  # convertir en lista de un único dict
-
-    print(f"🏁 Soluciones en el frente de Pareto: {len(F_pareto)}")
-
-    print("\n📌 Soluciones de Pareto:")
-    for i in range(len(F_pareto)):
-        print(f"\n--- Solución {i + 1} ---")
-
-        print("Variables de decisión (X):")
-        for name, value in X_pareto[i].items():
-            print(f"  {name}: {value}")
-
-        print("Objetivos (F):")
-        for j, obj_value in enumerate(F_pareto[i]):
-            obj_name = getattr(problem, "obj_names", [f"f{j}" for j in range(len(F_pareto[i]))])[j]
-            print(f"  {obj_name}: {obj_value}")
-
-    return 0
