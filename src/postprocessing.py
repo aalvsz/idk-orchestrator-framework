@@ -10,12 +10,17 @@ def write_results_file(data, res: Result, parameters: list, outputs: list):
     Guarda en un archivo CSV los resultados de la optimización, usando las clases Parameter y Output
     para obtener nombres y transformaciones de los objetivos.
     """
-    # Construir nombre de archivo de resultados
+    # Obtener el directorio de salida desde la configuración
+    output_dir = data['analysis']['params']['tracking']['path']
+
+    # Crear el directorio si no existe
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Construir el nombre del archivo de resultados
     savefile = os.path.join(
-        data['analysis']['params']['tracking']['path'],
+        output_dir,
         os.path.basename(data['model']['pathModel']).replace('.pkl', '_NSGA2_Results.csv')
     )
-
     # Si existe, eliminar para escribir de nuevo
     if os.path.isfile(savefile):
         os.remove(savefile)

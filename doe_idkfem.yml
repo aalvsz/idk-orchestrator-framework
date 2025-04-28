@@ -1,28 +1,13 @@
-################################################ MODEL SETTINGS ############################################################################
 model:
-  aplication: idkFEM             # Indicamos que usaremos el ROM
-  pathAplication: []          # Si no es necesario, se puede dejar vacío
-  pathModel: obj_Travesano_academic_st_transient.pkl   # Ruta al archivo que contiene el ROM
+  aplication: idkDOE
+  pathAplication: []
+  pathModel: obj_Travesano_academic_st_transient.pkl
 
-
-################################################ ANALYSIS SETTINGS ############################################################################
 analysis:
-  type: optimization
-
+  type: doe
   params:
-    seed: 15
-    algorithm: minimize      # Se usará la rama de optimización con ROM
-    method: Nelder-Mead      # Método de optimización
-    nStarts: 2
-    stopping_criteria:
-      max_iter_by_single_start: 2 # total number of iterations for the optimization process is this*nStarts
-      max_iter_without_improvement: 3
-      improvement_tolerance: 1e-4
-      epsilon: 1e-2
-      ftol: 1e-4
-      gtol: 1e-4
-      disp: False
-
+    method: LHS  # Puede ser LHS, FULLFACTORIAL, etc.
+    n_samples: 10  # Número de muestras a generar
     variables:
       [
         E, mu, ro, k, c, a,
@@ -31,48 +16,24 @@ analysis:
         t_frontal, t_posterior, t_origen, t_final,
         t_centro_sup, t_centro_inf,
         t_lat_sup, t_lat_inf,
-        t_nervios_long,
-        t_nervios_transv,
+        n_nervios_long, t_nervios_long,
+        n_nervios_transv, t_nervios_transv,
         prctg_ventana_horizontal, prctg_ventana_vertical,
         diam_ventana, diam_agujero,
         L_apoyo,
         T_amb, h_conv,
         F, Q
       ]
-
-    fObj: [fObj1, fObj2, fObj3]
-    weights: [0.3, 0.5, 0.2] # o None para un peso de 1 a todos los objetivos
-
-    # Aquí se definen las restricciones
-    constraints:
-      constrained: False
-      constraints_path: None # se usaria otro yaml con los bounds metidos dentro etc.
-      # 2) Restricciones personalizadas (custom): cada una con
-      #    - type: 'ineq' para g(x) ≥ 0, o 'eq' para g(x) = 0
-      #    - expression: cualquier función de x en Python (vector numpy)
-      custom:
-        # Ejemplo A: suma de espesores ≤ 0.5 (en el espacio escalado)
-        - type: ineq
-          expression: "0.5 - (x[10] + x[11] + x[12] + x[13])"
-        # Ejemplo B: relación entre espesores frontales y posteriores exacta
-        - type: eq
-          expression: "x[10] - x[11]"
-
-
-    calculation:
-      parallel: False
-      nJobs: 5
-
     tracking:
-      path: "results/minimization"
+      path: "results/doe_idkfem"
       saveData: True
 
-################################################ VARIABLE DEFINITION ############################################################################
+
 E:
   name: E
-  default: 125e9
+  default: 123e9
   type: continuo
-  value: [125e9]
+  value: [123e9]
   value interval: [112.5e9, 137.5e9]
   description: Módulo de Young (N/m²)
 
@@ -212,6 +173,14 @@ t_lat_inf:
   value interval: [198.0e-3, 242.0e-3]
   description: Espesor lateral inferior (m)
 
+n_nervios_long:
+  name: n_nervios_long
+  default: 2
+  type: discreto
+  value: [2]
+  value interval: [2, 3]
+  description: Número de nervios longitudinales
+
 t_nervios_long:
   name: t_nervios_long
   default: 40.0e-3
@@ -219,6 +188,14 @@ t_nervios_long:
   value: [40.0e-3]
   value interval: [36.0e-3, 44.0e-3]
   description: Espesor nervios longitudinales (m)
+
+n_nervios_transv:
+  name: n_nervios_transv
+  default: 18
+  type: discreto
+  value: [18]
+  value interval: [17, 19]
+  description: Número de nervios transversales
 
 t_nervios_transv:
   name: t_nervios_transv
@@ -299,9 +276,6 @@ Q:
   value: [100.0]
   value interval: [90.0, 110.0]
   description: Calor aplicado (W)
-
-
-################################################ OUTPUT DEFINITION ############################################################################
 
 fObj1:
   name: Peso

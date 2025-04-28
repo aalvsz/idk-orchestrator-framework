@@ -1,23 +1,36 @@
 model:
   aplication: idkROM             # Indicamos que usaremos el ROM
   pathAplication: []          # Si no es necesario, se puede dejar vacío
-  pathModel: idkROM_model.pkl   # Ruta al archivo que contiene el ROM
+  pathModel: NN_rom_model.pkl   # Ruta al archivo que contiene el ROM
   goal: prediction
 
 analysis:
   type: optimization
-  params:
-    algorithm: NSGA2      # Se usará la rama de optimización con ROM
-    popSize: 50               # Tamaño de la población
-    nGen: 100                 # Número de generaciones
-    variables: [P1, P2, P3, P4, P5]   # Variables de decisión (inputs del ROM)
-    fObj: [fObj1, fObj2]  # Objetivos a optimizar
-    tracking:
-      path: "main/opt"
-      saveData: True
 
-simulation:
-  parallel: False
+  params:
+    seed: 15
+    algorithm: NSGA3      # Se usará la rama de optimización con ROM
+    popSize: 50               # Tamaño de la población
+    nGen: 100 # Número de generaciones
+    settings: custom
+    operators: 
+      crossover: # simulated binary crossover
+        prob: 0.9
+        eta: 15
+      mutation: # polynomial mutation
+        prob: 0.1
+        eta: 20
+      selection:
+        name: tournament # o random
+        n_parents: 2
+      sampling:
+        name: mixed_random
+    
+    variables: [P1, P2, P3, P4, P5]   # Variables de decisión (inputs del ROM)
+    fObj: [fObj1, fObj2, fObj3]  # Objetivos a optimizar
+    tracking:
+      path: "results/ROM_optimization"
+      saveData: True
 
 
 P1:                       
@@ -60,12 +73,14 @@ P5:
   value interval: [0.040, 0.119]
   description: espesor de la base del pad de la pieza
 
-fObj1:                        
-  name: CO2_emission
+
+
+fObj1:
+  name: Pump_power
   type: results
-  tag: 
-  function: minimizar
-  description: Minimizar emisiones de CO2
+  tag:
+  function: maximizar
+  description: Maximizar la potencia de la bomba
 
 fObj2:                       
   name: Elastic_energy
@@ -73,3 +88,10 @@ fObj2:
   tag: 
   function: minimizar
   description: Maximizar la energía elástica
+
+fObj3:                        
+  name: CO2_emission
+  type: results
+  tag: 
+  function: minimizar
+  description: Minimizar emisiones de CO2
