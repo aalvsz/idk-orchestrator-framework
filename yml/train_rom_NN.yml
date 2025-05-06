@@ -1,0 +1,30 @@
+model:
+  aplication: idkROM
+  pathAplication: []
+  pathModel: 
+
+analysis:
+  type: rom training
+  data_source: raw
+  input_data: D:\idk_framework\idksimulation\results\doe_idkfem_static_100_samples\doe_SOBOL_results_inputs.csv
+  output_data: D:\idk_framework\idksimulation\results\doe_idkfem_static_100_samples\doe_SOBOL_results_outputs.csv
+  method: neural_network
+  n_capas: 5
+  n_neuronas: 30
+  activation: ReLU
+  dropout_rate: 0.1
+  optimizer_nn: Adam
+  lr: 0.1
+  lr_step: 0
+  lr_decrease_rate: 10
+  batch_size: 64
+  epochs: 5000
+  patience: 100
+  cv_folds: 5
+  convergence_threshold: 1e-5
+
+  tracking:
+    path: "results/train_rom_NN"
+    saveData: True
+
+

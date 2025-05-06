@@ -21,12 +21,7 @@ def runIdkSIM(pathMain: str):
     with open(pathMain, 'r') as f:
         data = yaml.safe_load(f)
 
-    # 2) Construir listas de Parameter y Output
-    parameters = []
-    for key in data['analysis']['params']['variables']:
-        parameters.append(Parameter(data[key]))
 
-        
     # 3) Inicializar la clase model y asignar rutas
     objModel = idksimObject()
     objModel.pathAplication = data['model']['pathAplication']
@@ -36,6 +31,13 @@ def runIdkSIM(pathMain: str):
 
     # Verificar el tipo de análisis y algoritmo especificado
     if data['analysis']['type'] == 'optimization':
+
+        #################### MOVER ESTO A IDKDOE E IDKOPT EN ESPECIAL??###############
+        # 2) Construir listas de Parameter y Output
+        parameters = []
+        for key in data['analysis']['params']['variables']:
+            parameters.append(Parameter(data[key]))
+
         outputs = []
         for f_key in data['analysis']['params']['fObj']:
             outputs.append(Output(data[f_key]))
@@ -200,16 +202,28 @@ def runIdkSIM(pathMain: str):
             problem = LeastSquares(data, objModel, Parameter, Output)
             res = problem.solve()
 
-
+        print_optimization_summary(res, parameters, outputs)
+        plot_pareto_and_dominated(res)
+        write_results_file(data, res, parameters, outputs)
+        
     elif data['analysis']['type'] == 'doe':
 
         from idkdoe.model import idkDOE
-        doe = idkDOE(data)
-        doe.run_doe(method=data['analysis']['params']['method'].upper(), n_samples=data['analysis']['params'].get('n_samples', 10), output_prefix="doe_lhs_results")
+        problem = idkDOE(data, objModel)
+        method = data['analysis']['params']['method'].upper()
+        n_samples=data['analysis']['params'].get('n_samples', 10)
+        problem.run_doe(method=method, n_samples=n_samples, output_prefix=f"doe_{method}_results")
+
+    elif data['analysis']['type'] == 'rom training':
+        
+        from idkrom.model import idkROM
+        print(f"Este es el diccionario que se le va a pasar a idkROM: {data}.")
+        rom = idkROM(data_dict=data)
+        model_path = rom.rom_training_pipeline(data)
+        print(f"Este es el path del modelo: {model_path}.")
+    
+    else:
+        raise ValueError(f"Tipo de análisis '{data['analysis']['type']}' no soportado.")
 
 
-
-
-    print_optimization_summary(res, parameters, outputs)
-    plot_pareto_and_dominated(res)
-    write_results_file(data, res, parameters, outputs)
+    

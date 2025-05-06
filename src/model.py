@@ -25,11 +25,12 @@ class idksimObject:
         Se asume que el objeto 'model' tiene implementado un método 'idk_run'
         que recibe un diccionario y devuelve otro diccionario con los resultados.
         """
-        if self.model is None:
-            self.load_model()
+        print(f"Modelo ejecutado con los parámetros: {input_dict}")
+
+        #if self.model is None:
+        self.load_model()
         result = self.model.idk_run(input_dict) # aqui entramos al metodo idk_run del modelo (.pkl)
 
-        print(f"Modelo ejecutado con los parámetros: {input_dict}")
         print(f"Resultado del modelo: {result}")
         return result
     
