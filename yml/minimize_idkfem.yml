@@ -2,7 +2,7 @@
 model:
   aplication: idkFEM             # Indicamos que usaremos el ROM
   pathAplication: []          # Si no es necesario, se puede dejar vacío
-  pathModel: obj_Travesano_academic_st_transient.pkl   # Ruta al archivo que contiene el ROM
+  pathModel: objects/obj_Travesano_academic_st_static.pkl   # Ruta al archivo que contiene el ROM
 
 
 ################################################ ANALYSIS SETTINGS ############################################################################
@@ -10,17 +10,16 @@ analysis:
   type: optimization
 
   params:
-    seed: 15
+    seed: 16
     algorithm: minimize      # Se usará la rama de optimización con ROM
     method: L-BFGS-B      # Método de optimización
-    nStarts: 2
     stopping_criteria:
-      max_iter_by_single_start: 2 # total number of iterations for the optimization process is this*nStarts
-      max_iter_without_improvement: 3
-      improvement_tolerance: 1e-4
-      epsilon: 1e-2
-      ftol: 1e-4
-      gtol: 1e-4
+      max_iter_by_single_start: 1 # total number of iterations for the optimization process is >=this*nStarts*(n_vars+1) (suele sar mas, debido a line search que requiere varias llamadas adicionales a F)
+      max_iter_without_improvement: 3 # no usado
+      improvement_tolerance: 1e-3 # no usado
+      epsilon: 1e-1
+      ftol: 1e-3
+      gtol: 1e-3
       disp: False
 
     variables:
@@ -46,28 +45,14 @@ analysis:
     fObj: [fObj1, fObj2]
     weights: [0.5, 0.5] # o None para un peso de 1 a todos los objetivos
 
-    # Aquí se definen las restricciones
-    constraints:
-      constrained: False
-      constraints_path: None # se usaria otro yaml con los bounds metidos dentro etc.
-      # 2) Restricciones personalizadas (custom): cada una con
-      #    - type: 'ineq' para g(x) ≥ 0, o 'eq' para g(x) = 0
-      #    - expression: cualquier función de x en Python (vector numpy)
-      custom:
-        # Ejemplo A: suma de espesores ≤ 0.5 (en el espacio escalado)
-        - type: ineq
-          expression: "0.5 - (x[10] + x[11] + x[12] + x[13])"
-        # Ejemplo B: relación entre espesores frontales y posteriores exacta
-        - type: eq
-          expression: "x[10] - x[11]"
-
-
     calculation:
       parallel: False
-      nJobs: 5
+      nJobs: 5 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
+      multiStart: True
+      nStarts: 1 # numero de tareas a ejecutar
 
     tracking:
-      path: "results/minimization"
+      path: "results/__test_idkfem_minimization"
       saveData: True
 
 ################################################ VARIABLE DEFINITION ############################################################################
@@ -325,13 +310,11 @@ n_nervios_long:
 fObj1:
   name: Peso
   type: results
-  tag:
   function: minimizar
   description: Objetivo 1
 
 fObj2:
   name: elastic_energy
   type: results
-  tag:
   function: minimizar
   description: Objetivo 2

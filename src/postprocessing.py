@@ -1,191 +1,145 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-
 from pymoo.core.result import Result
 
 # Asumimos que 'parameters' es una lista de instancias de Parameter
-def write_results_file(data, res: Result, parameters: list, outputs: list):
+def write_results_file(data, res, parameters: list, outputs: list, filename=None):
     """
-    Guarda en un archivo CSV los resultados de la optimización, usando las clases Parameter y Output
-    para obtener nombres y transformaciones de los objetivos.
+    Guarda resultados de optimización en CSV o JSON:
+    - Si `res` es un Result de pymoo, exporta todas las soluciones del frente de Pareto.
+    - Si `res` es un objeto con atributos `x_orig`, `fun`, `eval_history`, exporta la mejor solución y el historial.
     """
-    # Obtener el directorio de salida desde la configuración
     output_dir = data['analysis']['params']['tracking']['path']
-
-    # Crear el directorio si no existe
     os.makedirs(output_dir, exist_ok=True)
 
-    # Construir el nombre del archivo de resultados
-    savefile = os.path.join(
-        output_dir,
-        os.path.basename(data['model']['pathModel']).replace('.pkl', '_NSGA2_Results.csv')
-    )
-    # Si existe, eliminar para escribir de nuevo
-    if os.path.isfile(savefile):
-        os.remove(savefile)
-
-    with open(savefile, 'w') as f:
-        # Iterar soluciones
-        for i, x in enumerate(res.X):
-            f.write(f"--- Solución {i + 1} ---\n")
-
-            # Variables de decisión
-            if isinstance(x, dict):
-                # Caso dict con nombres
-                for name, val in x.items():
-                    f.write(f"{name}: {val}\n")
-            else:
-                # Asumimos array/list, usar parameters para nombres
-                for idx, param in enumerate(parameters):
-                    f.write(f"{param.name}: {x[idx]}\n")
-
-            f.write("Objetivos:\n")
-            # Objetivos y transformación
-            for j, raw_val in enumerate(res.F[i]):
-                out = outputs[j]
-                val = out.transform(raw_val)
-                f.write(f"{out.name}: {val}\n")
-
-            f.write("\n")
+    # Determinar tipo de resultado
+    if isinstance(res, Result):
+        # PYMOO NSGA2/3
+        savefile = filename or os.path.join(
+            output_dir,
+            os.path.basename(data['model']['pathModel']).replace('.pkl', 'results.csv')
+        )
+        if os.path.isfile(savefile): os.remove(savefile)
+        with open(savefile, 'w') as f:
+            for i, x in enumerate(res.X):
+                f.write(f"--- Solución {i + 1} ---\n")
+                # Decisiones
+                if isinstance(x, dict):
+                    for name, val in x.items(): f.write(f"{name}: {val}\n")
+                else:
+                    for idx, param in enumerate(parameters): f.write(f"{param.name}: {x[idx]}\n")
+                # Objetivos
+                f.write("Objetivos:\n")
+                for j, raw in enumerate(res.F[i]):
+                    val = outputs[j].transform(raw)
+                    f.write(f"{outputs[j].name}: {val}\n")
+                f.write("\n")
+    else:
+        # SCALAR minimize
+        savefile = filename or os.path.join(output_dir, 'minimize_results.json')
+        out = {
+            'x_opt': res.x_orig.tolist(),
+            'f_opt': float(res.fun)
+        }
+        if hasattr(res, 'eval_history'):
+            out['eval_history'] = res.eval_history
+        with open(savefile, 'w') as f:
+            import json
+            json.dump(out, f, indent=2)
+        print(f"Resultados guardados en: {savefile}")
 
     return 0
 
 
-# Asumimos que 'parameters' y 'outputs' son listas de Parameter y Output respectivamente
-
-def print_optimization_summary(results: Result, parameters: list, outputs: list):
-    """
-    Imprime un resumen de la optimización, listando generaciones, número de individuos y soluciones de Pareto,
-    con nombres y transformaciones de parámetros y objetivos.
-    """
-    print("\n🔎 RESUMEN DE LA OPTIMIZACIÓN")
+def print_optimization_summary(res, parameters: list, outputs: list):
+    from pymoo.core.result import Result
+    print("\n🔎 RESUMEN DE LA OPTIMIZACIÓN (GA Multiobjetivo)")
     print("-" * 50)
 
-    # Generaciones
-    n_gen = len(results.history)
-    print(f"🧬 Generaciones totales: {n_gen}")
+    if isinstance(res, Result):
+        n_gen = len(res.history)
+        print(f"🧬 Generaciones totales: {n_gen}")
+        total_inds = sum(len(algo.pop) for algo in res.history)
+        print(f"👥 Individuos evaluados (en total): {total_inds}")
 
-    # Total individuos evaluados
-    total_inds = sum(len(algo.pop) for algo in results.history)
-    print(f"👥 Individuos evaluados (en total): {total_inds}")
+        X = res.X
 
-    # Frontera de Pareto
-    F_pareto = results.F
-    X_pareto = results.X
-
-    # Asegurar forma consistente
-    if isinstance(X_pareto, np.ndarray) and X_pareto.dtype == object:
-        X_pareto = X_pareto.tolist()
-
-    if np.ndim(F_pareto) == 1:
-        F_pareto = F_pareto.reshape(1, -1)
-        X_pareto = [X_pareto]
-
-    n_pareto = len(F_pareto)
-    print(f"🏁 Soluciones en el frente de Pareto: {n_pareto}")
-
-    # Mostrar soluciones
-    for i in range(n_pareto):
-        print(f"\n--- Solución {i + 1} ---")
-        # Decisiones
-        print("Variables de decisión (X):")
-        x = X_pareto[i]
-        if isinstance(x, dict):
-            for name, val in x.items():
-                print(f"  {name}: {val}")
+        # --- Corrección: si X es dict de dicts (mal interpretado como varias soluciones)
+        if isinstance(X, dict) and all(isinstance(v, dict) for v in X.values()):
+            # Tomar la primera solución válida
+            first_key = next(iter(X))
+            x = X[first_key]
+            X_list = [x]
+        elif isinstance(X, dict):
+            X_list = [X]
         else:
-            for idx, param in enumerate(parameters):
-                print(f"  {param.name}: {x[idx]}")
+            X = np.atleast_2d(X)
+            X_list = X
 
-        # Objetivos
-        print("Objetivos (F):")
-        for j, raw_val in enumerate(F_pareto[i]):
-            out = outputs[j]
-            val = out.transform(raw_val)
-            print(f"  {out.name}: {val}")
+        print(f"🏁 Soluciones en el frente de Pareto: {len(X_list)}")
+
+        for i, x in enumerate(X_list):
+            print(f"\n--- Solución {i + 1} ---")
+            if isinstance(x, dict):
+                for k, v in x.items():
+                    print(f"  {k}: {v}")
+            else:
+                for idx, param in enumerate(parameters):
+                    try:
+                        print(f"  {param.name}: {x[idx]}")
+                    except IndexError:
+                        print(f"  ⚠️ Error: x tiene longitud {len(x)}, se esperaba al menos {idx+1}")
+                        break
+
+            f_vals = res.F[i] if res.F.ndim > 1 else res.F
+            print("Objetivos:")
+            for j, raw in enumerate(np.atleast_1d(f_vals)):
+                val = outputs[j].transform(raw)
+                print(f"  {outputs[j].name}: {val}")
+    else:
+        print("⚠️ Tipo de resultado no reconocido.")
 
     return 0
 
 
-def is_dominated_by_pareto(f, pareto_set):
+
+
+def plot_pareto_and_dominated(res, save_path: str = None, show=True):
     """
-    Verifica si el punto f está dominado por algún punto en el pareto_set.
-    Dominancia estricta: f' domina a f si f' <= f y f' != f
+    Dibuja Pareto vs dominadas:
+    - Para Result (pymoo): usa history.
+    - Para scalar minimize: traza eval_history puntos f vs iter.
     """
-    return any(np.all(f_ <= f) and np.any(f_ < f) for f_ in pareto_set)
-
-def plot_pareto_and_dominated(results: Result, save_path: str = "pareto_dominance.png"):
-    """
-    Dibuja en el mismo gráfico:
-    - El frente de Pareto (res.F)
-    - Todas las soluciones dominadas evaluadas durante la optimización
-    """
-    F_pareto = results.F
-    F_all = []
-
-    # Recolectar todos los F evaluados generación a generación
-    for algo in results.history:
-        F_gen = algo.pop.get("F")
-        F_all.append(F_gen)
-
-    F_all = np.vstack(F_all)
-
-    # Filtrar dominadas (todo lo que no está en el Pareto)
-    is_dominated = np.array([is_dominated_by_pareto(f, F_pareto) for f in F_all])
-    F_dominated = F_all[is_dominated]
-
-    # Visualizar
-    # Si es 1D, asume que hay un único objetivo.
-    if F_pareto.ndim == 1:
-        num_obj = 1
-    else:
-        num_obj = F_pareto.shape[1]
-
-    if num_obj == 1:
-        # Visualización para 1 objetivo
+    
+    if isinstance(res, Result):
+        # Extraer F pareto y F all
+        F_p = res.F
+        F_all = np.vstack([algo.pop.get('F') for algo in res.history])
+        # Dominancia
+        def dominated(f): return any(np.all(fp <= f) and np.any(fp < f) for fp in F_p)
+        mask_dom = np.array([dominated(f) for f in F_all])
+        F_dom = F_all[mask_dom]
+        # Plot 2D solamente
         plt.figure(figsize=(8,6))
-        plt.scatter(range(len(F_pareto)), F_pareto, c='red', label='Frontera de Pareto')
-        plt.xlabel("Individuo")
-        plt.ylabel("Objetivo (MSE)")
-        plt.title("Frente de Pareto (1 objetivo)")
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig(save_path, dpi=300)
-        plt.show()
-
-    if num_obj == 2:
-        plt.figure(figsize=(8,6))
-        if len(F_dominated) > 0:
-            plt.scatter(F_dominated[:, 0], F_dominated[:, 1], c='gray', s=20, label='Dominadas')
-        plt.scatter(F_pareto[:, 0], F_pareto[:, 1], c='red', s=40, marker='o', label='Frontera de Pareto')
-        plt.xlabel("Objetivo 1")
-        plt.ylabel("Objetivo 2")
-        plt.title("Frontera de Pareto y soluciones dominadas")
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-        plt.savefig(save_path, dpi=300)
-        plt.show()
-
-    elif num_obj == 3:
-        fig = plt.figure(figsize=(8,6))
-        ax = fig.add_subplot(111, projection='3d')
-        if len(F_dominated) > 0:
-            ax.scatter(F_dominated[:, 0], F_dominated[:, 1], F_dominated[:, 2], c='gray', s=20, label='Dominadas')
-        ax.scatter(F_pareto[:, 0], F_pareto[:, 1], F_pareto[:, 2], c='red', s=40, label='Frontera de Pareto')
-        ax.set_xlabel("Objetivo 1")
-        ax.set_ylabel("Objetivo 2")
-        ax.set_zlabel("Objetivo 3")
-        ax.set_title("Frontera de Pareto y soluciones dominadas")
-        ax.legend()
-        plt.tight_layout()
-        plt.savefig(save_path, dpi=300)
-        plt.show()
-
+        if F_dom.size: plt.scatter(F_dom[:,0],F_dom[:,1],label='Dominadas',marker='x')
+        plt.scatter(F_p[:,0],F_p[:,1],label='Pareto',marker='o')
+        plt.xlabel('Objetivo 1'); plt.ylabel('Objetivo 2')
+        plt.title('Pareto y dominadas')
+        plt.legend(); plt.grid(True); plt.tight_layout()
+        if save_path: plt.savefig(save_path, dpi=300)
+        if show: plt.show()
     else:
-        print(f"No se soporta la visualización para {F_pareto.ndim} objetivos.")
+        # Scalar minimize: plotea eval_history f vs iter
+        fvals = [e['f'][0] if isinstance(e['f'], list) else e['f'] for e in res.eval_history]
+
+        #fvals = [e['f'][0] if isinstance(e['f'], list) else e['f'] for e in res.eval_history]
+        plt.figure(figsize=(8,6))
+        plt.plot(range(len(fvals)), fvals, marker='o')
+        plt.xlabel('Iteración'); plt.ylabel('Función objetivo')
+        plt.title('Evolución de la función objetivo')
+        plt.grid(True); plt.tight_layout()
+        if save_path: plt.savefig(save_path, dpi=300)
+        if show: plt.show()
 
     return 0
-

@@ -1,0 +1,136 @@
+model:
+  aplication: Simulink
+  pathAplication: []
+  pathModel: C:\Users\aalvarezsanz\OneDrive - DanobatGroup\Danobat Ideko Ing. proiektuak - Control de temperatura\temperature-control-simulink-models\simulink\parameter_optimizer.py
+  modelType: class
+  className: SimulinkModelRunner
+
+analysis:
+  type: optimization
+  state: resume #new or resume
+  params:
+    algorithm: NSGA2
+    popSize: 15
+    nGen: 20
+    settings: default
+    operators: 
+      crossover: # simulated binary crossover
+        prob: 0.9
+        eta: 15
+      mutation: # polynomial mutation
+        prob: 0.1
+        eta: 20
+      selection:
+        name: tournament # o random
+        n_parents: 2
+      sampling:
+        name: mixed_random
+    variables:
+      [
+        dt_he, c_h, c_c, m_h, m_c, U, rho_taladrina
+      ]
+    fObj: [fObj1, fObj2]
+
+    constraints:
+    - expr: "m_h + m_c == 7"
+      tol: 1.0e-6
+
+    tracking:
+      path: "results/simulink_HG_optim_3"
+      saveData: True
+
+    calculation:
+      parallel: True
+      nJobs: 3 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
+
+
+dt_he:
+  name: dt_he
+  default: 1
+  type: continuo
+  value interval: [1, 20]
+  description: delta t del intercambiador de calor
+
+# dt_tank:
+#   name: dt_tank
+#   default: 1
+#   type: continuo
+#   value interval: [0, 100]
+#   description: delta t del tanque
+
+c_h:
+  name: c_h
+  default: 4500
+  type: continuo
+  value interval: [3000, 5000]
+  description: Calor especifico del lado caliente [J/(kg.K)]
+
+c_c:
+  name: c_c
+  default: 3200
+  type: continuo
+  value interval: [3000, 4000]
+  description: Calor especifico del lado frio [J/(kg.K)]
+
+m_h:
+  name: m_h
+  default: 3.5
+  type: continuo
+  value interval: [1, 7]
+  description: Masa del lado caliente [kg]
+
+m_c:
+  name: m_c
+  default: 3.5
+  type: continuo
+  value interval: [1, 7]
+  description: Masa del lado frio [kg]
+
+U:
+  name: U
+  default: 600
+  type: continuo
+  value interval: [500, 4000]
+  description: Coeficiente global de transferencia de calor [W/(m2.K)]
+
+A:
+  name: A
+  default: 4
+  type: continuo
+  value interval: [5, 10]
+  description: Area de intercambio termico [m2]
+
+rho_taladrina:
+  name: rho_taladrina
+  default: 930
+  type: continuo
+  value interval: [800, 1200]
+  description: Densidad de la taladrina [kg/m3]
+
+
+fObj1:
+  name: T_hot_out
+  type: results
+  data: array
+  parquet_path: D:\HG-temperature-control\temperature-control-simulink-models\simulink\datos_simulink.parquet
+  column_name: CoolantHotOut
+  function: minimizar
+  description: Objetivo 1
+
+fObj2:
+  name: T_cold_out
+  type: results
+  data: array
+  parquet_path: D:\HG-temperature-control\temperature-control-simulink-models\simulink\datos_simulink.parquet
+  column_name: CoolantColdOut
+  function: minimizar
+  description: Objetivo 2
+
+# fObj3:
+#  name: T_tank_out
+#  type: results
+#  data: array
+#  parquet_path: D:\HG-temperature-control\temperature-control-simulink-models\simulink\datos_simulink.parquet
+#  column_name: CoolantTank
+#  function: minimizar
+#  description: Objetivo 3

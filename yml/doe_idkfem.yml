@@ -2,12 +2,18 @@ model:
   aplication: idkDOE
   pathAplication: []
   pathModel: "objects/obj_Travesano_academic_st_static.pkl"
+  modelType: pickle
+  className: None  # No es necesario para pickle
+
 
 analysis:
   type: doe
   params:
     method: sobol  # Puede ser LHS, FULLFACTORIAL, etc.
-    n_samples: 5  # Número de muestras a generar
+    n_samples: 20000  # Número de muestras a generar
+    n_configs: 3 # Número de configuraciones a generar
+    parallel: True
+    n_workers: 3  # Número de procesos paralelos a utilizar
     variables:
       [
 #        E,
@@ -28,7 +34,7 @@ analysis:
         n_nervios_transv, n_nervios_long
       ]
     tracking:
-      path: "results/doe_idkfem_long"
+      path: "results/__doe_new"
       saveData: True
 
 
@@ -36,7 +42,6 @@ E:
   name: E
   default: 125e9
   type: continuo
-  value: [125e9]
   value interval: [112.5e9, 137.5e9]
   description: Módulo de Young (N/m²)
 
@@ -44,7 +49,6 @@ mu:
   name: mu
   default: 0.3
   type: constante
-  value: [0.3]
   value interval: [0.27, 0.33]
   description: Coeficiente de Poisson (-)
 
@@ -52,7 +56,6 @@ ro:
   name: ro
   default: 7250
   type: constante
-  value: [7250]
   value interval: [6525, 7975]
   description: Densidad (kg/m³)
 
@@ -60,7 +63,6 @@ k:
   name: k
   default: 45
   type: constante
-  value: [45]
   value interval: [40.5, 49.5]
   description: Conductividad térmica (W/m·K)
 
@@ -68,7 +70,6 @@ c:
   name: c
   default: 460
   type: constante
-  value: [460]
   value interval: [414, 506]
   description: Calor específico (J/kg·K)
 
@@ -76,7 +77,6 @@ a:
   name: a
   default: 11.72e-6
   type: constante
-  value: [11.72e-6]
   value interval: [10.548e-6, 12.892e-6]
   description: Coeficiente de dilatación térmica (1/K)
 
@@ -84,7 +84,6 @@ mesh_size:
   name: mesh_size
   default: 0.06
   type: constante
-  value: [0.06]
   value interval: [0.054, 0.066]
   description: Tamaño de malla (m)
 
@@ -92,7 +91,6 @@ L:
   name: L
   default: 11600.0e-3
   type: constante
-  value: [11600.0e-3]
   value interval: [10575.0e-3, 12925.0e-3]
   description: Largo total (m)
 
@@ -100,7 +98,6 @@ b:
   name: b
   default: 1420.0e-3
   type: continuo
-  value: [1420.0e-3]
   value interval: [1000.0e-3, 1800.0e-3]
   description: Ancho total (m)
 
@@ -108,7 +105,6 @@ h:
   name: h
   default: 1500.0e-3
   type: continuo
-  value: [1500.0e-3]
   value interval: [1200.0e-3, 1800.0e-3] # minimo: d + 2*G30
   description: Alto total (m)
 
@@ -116,7 +112,6 @@ t_frontal:
   name: t_frontal
   default: 60.0e-3
   type: continuo
-  value: [60.0e-3]
   value interval: [40.0e-3, 80.0e-3]
   description: Espesor pared frontal (m)
 
@@ -124,7 +119,6 @@ t_posterior:
   name: t_posterior
   default: 60.0e-3
   type: continuo
-  value: [60.0e-3]
   value interval: [40.0e-3, 80.0e-3]
   description: Espesor pared posterior (m)
 
@@ -132,7 +126,6 @@ t_origen:
   name: t_origen
   default: 60.0e-3
   type: continuo
-  value: [60.0e-3]
   value interval: [40.0e-3, 80.0e-3]
   description: Espesor pared origen (m)
 
@@ -140,7 +133,6 @@ t_final:
   name: t_final
   default: 60.0e-3
   type: continuo
-  value: [60.0e-3]
   value interval: [40.0e-3, 80.0e-3]
   description: Espesor pared final (m)
 
@@ -148,7 +140,6 @@ t_centro_sup:
   name: t_centro_sup
   default: 40.0e-3
   type: continuo
-  value: [40.0e-3]
   value interval: [20.0e-3, 100.0e-3]
   description: Espesor centro superior (m)
 
@@ -156,7 +147,6 @@ t_centro_inf:
   name: t_centro_inf
   default: 40.0e-3
   type: continuo
-  value: [40.0e-3]
   value interval: [20.0e-3, 100.0e-3]
   description: Espesor centro inferior (m)
 
@@ -164,7 +154,6 @@ t_lat_sup:
   name: t_lat_sup
   default: 40.0e-3
   type: continuo
-  value: [40.0e-3]
   value interval: [20.0e-3, 100.0e-3]
   description: Espesor lateral superior (m)
 
@@ -172,7 +161,6 @@ t_lat_inf:
   name: t_lat_inf
   default: 40.0e-3
   type: continuo
-  value: [40.0e-3]
   value interval: [20.0e-3, 100.0e-3]
   description: Espesor lateral inferior (m)
 
@@ -180,7 +168,6 @@ t_nervios_long:
   name: t_nervios_long
   default: 40.0e-3
   type: continuo
-  value: [40.0e-3]
   value interval: [15.0e-3, 50.0e-3]
   description: Espesor nervios longitudinales (m)
 
@@ -188,7 +175,6 @@ t_nervios_transv:
   name: t_nervios_transv
   default: 30.0e-3
   type: continuo
-  value: [30.0e-3]
   value interval: [15.0e-3, 50.0e-3]
   description: Espesor nervios transversales (m)
 
@@ -196,7 +182,6 @@ prctg_ventana_horizontal:
   name: prctg_ventana_horizontal
   default: 0.75
   type: continuo
-  value: [0.75]
   value interval: [0.50, 0.80]
   description: apertura horizontal del travesaño
 
@@ -204,7 +189,6 @@ prctg_ventana_vertical:
   name: prctg_ventana_vertical
   default: 0.75
   type: continuo
-  value: [0.75]
   value interval: [0.50, 0.80]
   description: apertura vertical del travesaño
 
@@ -212,7 +196,6 @@ diam_ventana:
   name: diam_ventana
   default: 300.0e-3
   type: continuo
-  value: [300.0e-3]
   value interval: [200.0e-3, 330.0e-3]
   description: Diámetro de ventana (m)
 
@@ -220,7 +203,6 @@ diam_agujero:
   name: diam_agujero
   default: 600.0e-3
   type: continuo
-  value: [600.0e-3]
   value interval: [400.0e-3, 800.0e-3]
   description: Diámetro de agujero (m)
 
@@ -228,7 +210,6 @@ L_apoyo:
   name: L_apoyo
   default: 1000.0e-3
   type: constante
-  value: [1000.0e-3]
   value interval: [900.0e-3, 1100.0e-3]
   description: Longitud del área de apoyo (m)
 
@@ -236,7 +217,6 @@ T_amb:
   name: T_amb
   default: 21.0
   type: continuo
-  value: [21.0]
   value interval: [18.9, 23.1]
   description: Temperatura ambiente (°C)
 
@@ -244,7 +224,6 @@ h_conv:
   name: h_conv
   default: 10.0
   type: continuo
-  value: [10.0]
   value interval: [9.0, 11.0]
   description: Coeficiente de convección (W/m·K)
 
@@ -252,7 +231,6 @@ F:
   name: F
   default: 10000.0
   type: continuo
-  value: [10000.0]
   value interval: [9000.0, 11000.0]
   description: Fuerza aplicada (N)
 
@@ -260,7 +238,6 @@ Q:
   name: Q
   default: 100.0
   type: continuo
-  value: [100.0]
   value interval: [90.0, 110.0]
   description: Calor aplicado (W)
 
@@ -268,7 +245,6 @@ n_nervios_transv:
   name: n_nervios_transv
   default: 22
   type: discreto
-  value: [22]
   value interval: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
   description: Número de nervios transversales
 
@@ -276,6 +252,5 @@ n_nervios_long:
   name: n_nervios_long
   default: 2
   type: discreto
-  value: [2]
   value interval: [2, 3, 4]
   description: Número de nervios longitudinales

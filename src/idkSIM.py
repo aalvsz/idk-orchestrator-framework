@@ -1,12 +1,13 @@
+import os
 import yaml
-import sys, os
 import plotly.io as pio
+from multiprocessing import Process
 pio.renderers.default = 'browser'
 from src.model import idksimObject
 from src.postprocessing import plot_pareto_and_dominated, print_optimization_summary, write_results_file
 from src.parameters import Parameter
 from src.outputs import Output
-
+from src.profiling import monitor_memory, memory_usage_plot
 
 # =============================================================================
 # Función principal runIdkSIM: Define la secuencia de la simulación/optimización
@@ -22,16 +23,14 @@ def runIdkSIM(pathMain: str):
         data = yaml.safe_load(f)
 
 
-    # 3) Inicializar la clase model y asignar rutas
-    objModel = idksimObject()
-    objModel.pathAplication = data['model']['pathAplication']
-    objModel.pathModel = data['model']['pathModel']
-    
+    # 3) Inicializar la clase model
+    objModel = idksimObject(data)
     problem = None
+
+    output_path = data['analysis']['params']['tracking']['path']
 
     # Verificar el tipo de análisis y algoritmo especificado
     if data['analysis']['type'] == 'optimization':
-
         #################### MOVER ESTO A IDKDOE E IDKOPT EN ESPECIAL??###############
         # 2) Construir listas de Parameter y Output
         parameters = []
@@ -42,67 +41,22 @@ def runIdkSIM(pathMain: str):
         for f_key in data['analysis']['params']['fObj']:
             outputs.append(Output(data[f_key]))
 
+
         if data['analysis']['params']['algorithm'] == 'NSGA2':
-            from idkopt.algorithms.genetic_algorithm import GeneticAlgorithm
+
             from idkopt.algorithms.mixed_var_genetic import MixedVariableGeneticProblem
-            from pymoo.algorithms.moo.nsga2 import NSGA2
-            from pymoo.core.mixed import MixedVariableMating, MixedVariableSampling, MixedVariableDuplicateElimination
-            from pymoo.operators.crossover.sbx import SBX
-            from pymoo.operators.mutation.pm import PM
-            from pymoo.optimize import minimize
 
             # Inicializar el problema de optimización definido en la clase opt_genalg
+
             problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs)
-
-            # Inicializar el algoritmo NSGA2 para el problema
-            pop_size = data['analysis']['params']['popSize']
-            n_gen_total = data['analysis']['params']['nGen']
-
-            if data['analysis']['params']['settings'] == 'custom':
-                crossover = SBX(prob=data['analysis']['params']['operators']['crossover']['prob'],
-                                 eta=data['analysis']['params']['operators']['crossover']['eta'])
-                mutation = PM(prob=data['analysis']['params']['operators']['mutation']['prob'],
-                               eta=data['analysis']['params']['operators']['mutation']['eta'])
-                
-                slct = data['analysis']['params']['operators']['selection'] 
-                if slct['name'] == 'random':
-                    from pymoo.operators.selection.rnd import RandomSelection
-                    selection = RandomSelection()
-                else:
-                    from pymoo.operators.selection.tournament import TournamentSelection
-                    from pymoo.algorithms.moo.nsga2 import RankAndCrowdingSurvival
-                    selection = TournamentSelection(func_comp=RankAndCrowdingSurvival,
-                                                     pressure=slct.get('n_parents', 2))
-                    
-            else: 
-                crossover = None
-                mutation = None
-                selection = None
-
-            algorithm = NSGA2(
-                pop_size=pop_size,
-                sampling=MixedVariableSampling(),
-                mating=MixedVariableMating(eliminate_duplicates=MixedVariableDuplicateElimination()),
-                eliminate_duplicates=MixedVariableDuplicateElimination(),
-                crossover=crossover,
-                mutation=mutation,
-                selection=selection
-            )
-
-            # Ejecutar la optimización utilizando la función minimize de pymoo
-            res = minimize(problem,
-                   algorithm,
-                   ('n_gen', n_gen_total),
-                   seed=2,
-                   verbose=False,
-                   save_history=True)
+            print("ok antes de hacer solve")
+            res = problem.solve(resume=False if data['analysis']['state']=='new' else True, checkpoint_path=os.path.join(output_path, "genetic_alg_checkpoint.pkl"))
 
 
         elif data['analysis']['params']['algorithm'] == 'NSGA3':
             
             from pymoo.algorithms.moo.nsga3 import NSGA3
             from pymoo.util.ref_dirs import get_reference_directions
-            from idkopt.algorithms.genetic_algorithm import GeneticAlgorithm
             from idkopt.algorithms.mixed_var_genetic import MixedVariableGeneticProblem
             from pymoo.core.mixed import MixedVariableMating, MixedVariableSampling, MixedVariableDuplicateElimination
             from pymoo.operators.crossover.sbx import SBX
@@ -188,11 +142,15 @@ def runIdkSIM(pathMain: str):
         
 
         elif data['analysis']['params']['algorithm'] == 'minimize':
-            
+
             from idkopt.algorithms.minimize import Minimization
 
             problem = Minimization(data, objModel, Parameter, Output)
             res = problem.solve()
+            try:
+                problem.summary()
+            except Exception as e:
+                print(f"[⚠️  Error en resumen] No se pudo generar el summary: {e}")
 
 
         elif data['analysis']['params']['algorithm'] == 'least squares':
@@ -203,16 +161,77 @@ def runIdkSIM(pathMain: str):
             res = problem.solve()
 
         print_optimization_summary(res, parameters, outputs)
-        plot_pareto_and_dominated(res)
-        write_results_file(data, res, parameters, outputs)
+
+        try:
+            plot_pareto_and_dominated(res)
+        except Exception as e:
+            print(f"Error 1 al graficar el Pareto: {e}")
+        
+        try:
+            plot_pareto_and_dominated(problem)
+        except Exception as e:
+            print(f"Error 2 al graficar el Pareto: {e}")
+
+        try:
+            write_results_file(data, res, parameters, outputs)
+        except Exception as e:
+            print(f"Error 3 al escribir el archivo de resultados: {e}")
         
     elif data['analysis']['type'] == 'doe':
 
         from idkdoe.model import idkDOE
+        
         problem = idkDOE(data, objModel)
         method = data['analysis']['params']['method'].upper()
         n_samples=data['analysis']['params'].get('n_samples', 10)
-        problem.run_doe(method=method, n_samples=n_samples, output_prefix=f"doe_{method}_results")
+        parallel = data['analysis']['params'].get('parallel', False)
+        n_workers = data['analysis']['params'].get('n_workers', 1)
+        target_path = data['analysis']['params']['tracking']['path']
+        output_file = os.path.join(target_path, "mem_usage.csv")
+        monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file})
+        monitor.start()
+        
+        n_configs = data['analysis']['params'].get('n_configs', 1)
+
+        ejecutar_doe = input("¿Quieres ejecutar el DOE ahora? (si/no): ").strip().lower()
+
+        if n_configs > 1:
+
+            if ejecutar_doe == "si":
+                part_idx = input(f"¿Qué archivo deseas ejecutar? (1 a {n_configs}): ").strip()
+                input_csv = f"DOE_inputs_{method}_part{part_idx}.csv"
+
+                #monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file})
+                #monitor.start()
+
+                problem.run_doe_from_csv(
+                    input_csv=input_csv,
+                    output_prefix=f"doe_{method}_results_part{part_idx}",
+                    parallel=parallel,
+                    n_workers=n_workers
+                )
+
+                #monitor.terminate()
+                #monitor.join()
+                #memory_usage_plot(output_file)
+            else:
+                problem.generate_samples(method=method, n_samples=n_samples)
+
+                print("Solo se generaron las muestras. No se ejecutaron simulaciones.")
+
+        else:
+            #monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file})
+            #monitor.start()
+
+            problem.run_doe(method=method,
+                            n_samples=n_samples,
+                            output_prefix=f"doe_{method}_results",
+                            parallel=parallel,
+                            n_workers=n_workers)
+
+            #monitor.terminate()
+            #monitor.join()
+            #memory_usage_plot(output_file)
 
     elif data['analysis']['type'] == 'rom training':
         
