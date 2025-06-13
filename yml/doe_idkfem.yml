@@ -9,11 +9,11 @@ model:
 analysis:
   type: doe
   params:
-    method: sobol  # Puede ser LHS, FULLFACTORIAL, etc.
+    method: lhs  # Puede ser LHS, FULLFACTORIAL, etc.
     n_samples: 20000  # Número de muestras a generar
     n_configs: 3 # Número de configuraciones a generar
     parallel: True
-    n_workers: 3  # Número de procesos paralelos a utilizar
+    n_workers: 7  # Número de procesos paralelos a utilizar
     variables:
       [
 #        E,
@@ -34,7 +34,7 @@ analysis:
         n_nervios_transv, n_nervios_long
       ]
     tracking:
-      path: "results/__doe_new"
+      path: "results/__doe_travesano"
       saveData: True
 
 

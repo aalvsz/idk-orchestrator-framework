@@ -12,7 +12,7 @@ if __name__ == "__main__": # para parelizacion, es necesaria la estructura if __
     #idkSIM.runIdkSIM("yml/hyperparameter_optim.yml")
     #idkSIM.runIdkSIM("yml/optim_idkFEM.yml")
     #idkSIM.runIdkSIM("yml/minimize_idkfem.yml")
-    idkSIM.runIdkSIM("yml/doe_idkfem.yml") 
+    idkSIM.runIdkSIM("yml/doe_travesano_idkfem.yml") 
     #idkSIM.runIdkSIM("yml/train_rom_NN.yml")
     #idkSIM.runIdkSIM("yml/optim_simulink.yml")
 
