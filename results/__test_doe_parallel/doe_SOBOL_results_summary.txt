@@ -1,8 +1,0 @@
-Resumen de la simulación DOE
-----------------------------
-Tiempo transcurrido (segundos): 375.61
-Número total de evaluaciones: 10
-Modo de ejecución: Paralelo
-Número de procesos paralelos usados: 5
-Número total de CPUs disponibles: 22
-Ruta de guardado: results/__test_doe_parallel
