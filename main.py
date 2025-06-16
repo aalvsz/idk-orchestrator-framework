@@ -3,6 +3,7 @@ import src.idkSIM as idkSIM
 import os, sys, time
 start_time = time.time()
 
+# hacer commit de idkFEM
 sys.path.insert(0, os.path.abspath(r"D:/idk_framework/idkFEM")) # para no tener que instalar idkFEM como paquete
 
 

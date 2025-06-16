@@ -7,12 +7,14 @@ model:
 
 analysis:
   type: doe
+  input_csv: "results/__doe_new/DOE_inputs_LHS_part1.csv"
   params:
     method: lhs
-    n_samples: 20000
+    n_samples: 50000
     n_configs: 3
+    chunks: [0.1, 0.1, 0.8]
     parallel: true
-    n_workers: 7
+    n_workers: 2
     variables:
       [
         t_front, t_rear, t_top, t_bottom, t_lateral,
@@ -21,7 +23,7 @@ analysis:
         K_trans, N_trans, ang_Z, D
       ]
     tracking:
-      path: "results/__doe_travesano"
+      path: "results/full_DOE_travesano"
       saveData: true
 
 t_front:

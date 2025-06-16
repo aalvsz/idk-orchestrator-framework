@@ -188,50 +188,46 @@ def runIdkSIM(pathMain: str):
         n_workers = data['analysis']['params'].get('n_workers', 1)
         target_path = data['analysis']['params']['tracking']['path']
         output_file = os.path.join(target_path, "mem_usage.csv")
-        monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file})
+        monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file}, daemon=True)
         monitor.start()
         
-        n_configs = data['analysis']['params'].get('n_configs', 1)
+        
+        print("Selecciona una opción:")
+        print("0 - Ejecutar DOE desde 0")
+        print("1 - Ejecutar DOE ya sampleado")
+        print("2 - Samplear sin evaluar")
 
-        ejecutar_doe = input("¿Quieres ejecutar el DOE ahora? (si/no): ").strip().lower()
+        while True:
+            try:
+                ejecutar_doe = int(input("Introduce el número correspondiente (0, 1 o 2): ").strip())
+                if ejecutar_doe in [0, 1, 2]:
+                    break
+                else:
+                    print("Opción no válida. Por favor, introduce 0, 1 o 2.")
+            except ValueError:
+                print("Entrada inválida. Por favor, introduce un número.")
 
-        if n_configs > 1:
-
-            if ejecutar_doe == "si":
-                part_idx = input(f"¿Qué archivo deseas ejecutar? (1 a {n_configs}): ").strip()
-                input_csv = f"DOE_inputs_{method}_part{part_idx}.csv"
-
-                #monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file})
-                #monitor.start()
-
-                problem.run_doe_from_csv(
-                    input_csv=input_csv,
-                    output_prefix=f"doe_{method}_results_part{part_idx}",
-                    parallel=parallel,
-                    n_workers=n_workers
-                )
-
-                #monitor.terminate()
-                #monitor.join()
-                #memory_usage_plot(output_file)
-            else:
-                problem.generate_samples(method=method, n_samples=n_samples)
-
-                print("Solo se generaron las muestras. No se ejecutaron simulaciones.")
-
-        else:
-            #monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file})
-            #monitor.start()
+        if ejecutar_doe == 0:
+            input_csv = data['analysis']['input_csv']
 
             problem.run_doe(method=method,
                             n_samples=n_samples,
-                            output_prefix=f"doe_{method}_results",
                             parallel=parallel,
                             n_workers=n_workers)
 
-            #monitor.terminate()
-            #monitor.join()
-            #memory_usage_plot(output_file)
+        elif ejecutar_doe == 1:
+            input_csv = data['analysis']['input_csv']
+
+            problem.run_doe_from_csv(
+                input_csv=input_csv,
+                parallel=parallel,
+                n_workers=n_workers
+                )
+
+        elif ejecutar_doe == 2:
+            problem.generate_samples(method=method, n_samples=n_samples)
+            print("Solo se generaron las muestras. No se ejecutaron simulaciones.")
+
 
     elif data['analysis']['type'] == 'rom training':
         
