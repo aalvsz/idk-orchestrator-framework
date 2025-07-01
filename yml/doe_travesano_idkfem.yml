@@ -1,20 +1,20 @@
 model:
   aplication: idkDOE
   pathAplication: []
-  pathModel: "objects/obj_Travesano_academic_st_static.pkl"
+  pathModel: "objects/obj_HGP.pkl"
   modelType: pickle
   className: None
 
 analysis:
   type: doe
-  input_csv: "results/__doe_new/DOE_inputs_LHS_part1.csv"
+  input_csv: "results/__doe_ander/DOE_inputs_LHS_part1_modified.csv"
   params:
     method: lhs
     n_samples: 50000
-    n_configs: 3
+    n_configs: 4
     chunks: [0.1, 0.1, 0.8]
     parallel: true
-    n_workers: 2
+    n_workers: 4
     variables:
       [
         t_front, t_rear, t_top, t_bottom, t_lateral,
@@ -23,7 +23,7 @@ analysis:
         K_trans, N_trans, ang_Z, D
       ]
     tracking:
-      path: "results/full_DOE_travesano"
+      path: "results/new_DOE_Ander"
       saveData: true
 
 t_front:

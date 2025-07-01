@@ -1,0 +1,99 @@
+model:
+  application: TestFunction
+  pathAplication: []
+  pathModel: D:\idk_framework\idksimulation\objects\test_function.py
+  modelType: class
+  className: TestFunctionAnalytic
+
+analysis:
+
+  type: optimization
+  state: new #new or resume
+
+  # Parámetros para la optimización multiobjetivo usando NSGA2
+  params:
+    seed: 25
+    algorithm: NSGA2                # Algoritmo de optimización evolutiva
+    popSize: 15                     # Tamaño de la población
+    nGen: 20                        # Número de generaciones
+    settings: default               # Configuración por defecto
+    operators: 
+      crossover:                    # Cruce simulado binario
+        prob: 0.9                   # Probabilidad de cruce
+        eta: 15                     # Parámetro de distribución para cruce
+      mutation:                     # Mutación polinómica
+        prob: 0.1                   # Probabilidad de mutación
+        eta: 20                     # Parámetro de distribución para mutación
+      selection:
+        name: tournament            # Selección por torneo (o random)
+        n_parents: 2                # Número de padres seleccionados
+      sampling:
+        name: mixed_random          # Método de muestreo inicial
+    variables:
+     [
+       x1, x2                      # Variables de decisión
+     ]
+    fObj: [fObj1]                 # Función objetivo a optimizar
+
+#  params:
+#    seed: 25
+#    algorithm: minimize      # Se usará la rama de optimización con ROM
+#    method: L-BFGS-B      # Método de optimización
+#    stopping_criteria:
+#      max_iter_by_single_start: 2000 # total number of iterations for the optimization process is >=this*nStarts*(n_vars+1) (suele sar mas, debido a line search que requiere varias llamadas adicionales a F)
+#      max_iter_without_improvement: 100 
+#      improvement_tolerance: 1e-5 
+#      epsilon: 1e-3
+#      ftol: 1e-4
+#      gtol: 1e-4
+#      disp: True # Mostrar información de la optimización
+#
+#    variables:
+#      [
+#      x1, x2
+#      ]
+#    fObj: [fObj1]    
+#    weights: None # o None para un peso de 1 a todos los objetivos
+
+
+    constrained: False
+    constraints:
+      - expr: 
+        tol: 
+
+    tracking:
+      path: "results/__test_function_optim_MINIMIZE"
+      saveData: True
+
+
+    calculation:
+      parallel: False
+      nJobs: 5 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
+      multiStart: True
+      nStarts: 5 # numero de tareas a ejecutar
+  
+
+
+
+x1:
+  name: x1
+  default: 2.5
+  type: continuo
+  value interval: [-5, 10]
+  description: Valor de x1 para la funcion de prueba
+
+x2:
+  name: x2
+  default: 7.5
+  type: continuo
+  value interval: [0, 15]
+  description: Valor de x2 para la funcion de prueba
+
+
+fObj1:
+  name: branin
+  type: results
+  parquet_path:
+  column_name: 
+  function: minimizar
+  description: Minimizar el valor de la funcion de prueba

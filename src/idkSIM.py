@@ -4,10 +4,10 @@ import plotly.io as pio
 from multiprocessing import Process
 pio.renderers.default = 'browser'
 from src.model import idksimObject
-from src.postprocessing import plot_pareto_and_dominated, print_optimization_summary, write_results_file
+from src.postprocessing import optimization_summary
 from src.parameters import Parameter
 from src.outputs import Output
-from src.profiling import monitor_memory, memory_usage_plot
+from src.profiling import monitor_memory
 
 # =============================================================================
 # Función principal runIdkSIM: Define la secuencia de la simulación/optimización
@@ -46,12 +46,13 @@ def runIdkSIM(pathMain: str):
 
             from idkopt.algorithms.mixed_var_genetic import MixedVariableGeneticProblem
 
-            # Inicializar el problema de optimización definido en la clase opt_genalg
-
             problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs)
-            print("ok antes de hacer solve")
+
             res = problem.solve(resume=False if data['analysis']['state']=='new' else True, checkpoint_path=os.path.join(output_path, "genetic_alg_checkpoint.pkl"))
 
+            import dill
+            with open(os.path.join(output_path, "resX.pkl"), "wb") as f:
+                dill.dump(res.X, f)
 
         elif data['analysis']['params']['algorithm'] == 'NSGA3':
             
@@ -114,32 +115,9 @@ def runIdkSIM(pathMain: str):
                    verbose=False,
                    save_history=True)
             
-
-        elif data['analysis']['params']['algorithm'] == 'MixedVariableGA':
-            
-            from idkopt.algorithms.mixed_var_genetic import MixedVariableGeneticProblem
-            from pymoo.core.mixed import MixedVariableGA
-            from pymoo.optimize import minimize
-
-            # Inicializar el problema de optimización definido en la clase opt_genalg
-            problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs)
-
-            # Inicializar el algoritmo NSGA2 para el problema
-            pop_size = data['analysis']['params']['popSize']
-            n_gen_total = data['analysis']['params']['nGen']
-            
-            algorithm = MixedVariableGA(
-                pop_size=pop_size
-            )
-
-            # Ejecutar la optimización utilizando la función minimize de pymoo
-            res = minimize(problem,
-                   algorithm,
-                   ('n_gen', n_gen_total),
-                   seed=2,
-                   verbose=False,
-                   save_history=True)
-        
+            import dill
+            with open(os.path.join(output_path, "resX.pkl"), "wb") as f:
+                dill.dump(res.X, f)   
 
         elif data['analysis']['params']['algorithm'] == 'minimize':
 
@@ -147,10 +125,7 @@ def runIdkSIM(pathMain: str):
 
             problem = Minimization(data, objModel, Parameter, Output)
             res = problem.solve()
-            try:
-                problem.summary()
-            except Exception as e:
-                print(f"[⚠️  Error en resumen] No se pudo generar el summary: {e}")
+            
 
 
         elif data['analysis']['params']['algorithm'] == 'least squares':
@@ -160,23 +135,14 @@ def runIdkSIM(pathMain: str):
             problem = LeastSquares(data, objModel, Parameter, Output)
             res = problem.solve()
 
-        print_optimization_summary(res, parameters, outputs)
 
         try:
-            plot_pareto_and_dominated(res)
+            optimization_summary(data, res, parameters, outputs, problem)
         except Exception as e:
-            print(f"Error 1 al graficar el Pareto: {e}")
-        
-        try:
-            plot_pareto_and_dominated(problem)
-        except Exception as e:
-            print(f"Error 2 al graficar el Pareto: {e}")
+            import traceback
+            print(f"Error: {e}")
+            traceback.print_exc()
 
-        try:
-            write_results_file(data, res, parameters, outputs)
-        except Exception as e:
-            print(f"Error 3 al escribir el archivo de resultados: {e}")
-        
     elif data['analysis']['type'] == 'doe':
 
         from idkdoe.model import idkDOE

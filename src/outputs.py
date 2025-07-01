@@ -1,3 +1,5 @@
+import pandas as pd
+
 class Output:
     """
     Clase que representa un objetivo de optimización.
@@ -27,19 +29,13 @@ class Output:
         self.description = config.get("description", "")
         self.sign = 1 if self.function == "minimizar" else -1
         self.data = config.get("data", "scalar")
+        self.goal = config.get("goal", "RMSE")
         if self.data == 'array':
-            import pandas as pd
             self.parquet_path = config.get("parquet_path", None)
             self.column_name = config.get("column_name", None)
             df = pd.read_parquet(self.parquet_path)
             self.tiempos_obj = df.index.values  # array con los tiempos donde tienes valores objetivo
             self.valores_obj = df[self.column_name].values
-
-
-
-
-
-
 
 
     def transform(self, value):

@@ -1,5 +1,5 @@
 model:
-  aplication: Simulink
+  application: Simulink
   pathAplication: []
   pathModel: C:\Users\aalvarezsanz\OneDrive - DanobatGroup\Danobat Ideko Ing. proiektuak - Control de temperatura\temperature-control-simulink-models\simulink\parameter_optimizer.py
   modelType: class
@@ -7,11 +7,11 @@ model:
 
 analysis:
   type: optimization
-  state: resume #new or resume
+  state: new #new or resume
   params:
     algorithm: NSGA2
-    popSize: 15
-    nGen: 20
+    popSize: 25
+    nGen: 50
     settings: default
     operators: 
       crossover: # simulated binary crossover
@@ -27,49 +27,36 @@ analysis:
         name: mixed_random
     variables:
       [
-        dt_he, c_h, c_c, m_h, m_c, U, rho_taladrina
+        c_h, c_c, rho_taladrina, rho_glicol, U,
+        U_tank, A_tank, m_dot_h_tank_gain, aporte_bomba
       ]
-    fObj: [fObj1, fObj2]
+    fObj: [fObj1, fObj2, fObj3]
 
+    constrained: False
     constraints:
-    - expr: "m_h + m_c == 7"
-      tol: 1.0e-6
+      - expr: "m_h + m_c == 7"
+        tol: 1.0e-6
 
     tracking:
-      path: "results/simulink_HG_optim_3"
+      path: "results/simulink_HG_optim_HE_TANK__test"
       saveData: True
 
     calculation:
-      parallel: True
-      nJobs: 3 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
-
-
-dt_he:
-  name: dt_he
-  default: 1
-  type: continuo
-  value interval: [1, 20]
-  description: delta t del intercambiador de calor
-
-# dt_tank:
-#   name: dt_tank
-#   default: 1
-#   type: continuo
-#   value interval: [0, 100]
-#   description: delta t del tanque
+      parallel: False
+      nJobs: 2 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
 
 c_h:
   name: c_h
   default: 4500
   type: continuo
-  value interval: [3000, 5000]
+  value interval: [1000, 5000]
   description: Calor especifico del lado caliente [J/(kg.K)]
 
 c_c:
   name: c_c
   default: 3200
   type: continuo
-  value interval: [3000, 4000]
+  value interval: [1000, 4000]
   description: Calor especifico del lado frio [J/(kg.K)]
 
 m_h:
@@ -88,25 +75,52 @@ m_c:
 
 U:
   name: U
-  default: 600
+  default: 200
   type: continuo
-  value interval: [500, 4000]
+  value interval: [1, 1000]
   description: Coeficiente global de transferencia de calor [W/(m2.K)]
 
-A:
-  name: A
-  default: 4
+U_tank:
+  name: U_tank
+  default: 200
   type: continuo
-  value interval: [5, 10]
+  value interval: [1, 1000]
+  description: Coeficiente global de transferencia de calor [W/(m2.K)]
+
+A_tank:
+  name: A_tank
+  default: 5
+  type: continuo
+  value interval: [1, 20]
   description: Area de intercambio termico [m2]
 
 rho_taladrina:
   name: rho_taladrina
   default: 930
   type: continuo
-  value interval: [800, 1200]
+  value interval: [700, 1500]
   description: Densidad de la taladrina [kg/m3]
 
+rho_glicol:
+  name: rho_glicol
+  default: 1100
+  type: continuo
+  value interval: [700, 1500]
+  description: Densidad de la taladrina [kg/m3]
+
+m_dot_h_tank_gain:
+  name: m_dot_h_tank_gain
+  default: 1.2
+  type: continuo
+  value interval: [1, 5]
+  description: Factor de ganancia del caudal de taladrina con respecto al caudal del lado frio
+
+aporte_bomba:
+  name: aporte_bomba
+  default: 0.1
+  type: continuo
+  value interval: [0.05, 1.0]
+  description: Aporte de la bomba a T_in_h del tanque [ºC]
 
 fObj1:
   name: T_hot_out
@@ -115,6 +129,7 @@ fObj1:
   parquet_path: D:\HG-temperature-control\temperature-control-simulink-models\simulink\datos_simulink.parquet
   column_name: CoolantHotOut
   function: minimizar
+  goal: RMSE
   description: Objetivo 1
 
 fObj2:
@@ -124,13 +139,15 @@ fObj2:
   parquet_path: D:\HG-temperature-control\temperature-control-simulink-models\simulink\datos_simulink.parquet
   column_name: CoolantColdOut
   function: minimizar
+  goal: RMSE
   description: Objetivo 2
 
-# fObj3:
-#  name: T_tank_out
-#  type: results
-#  data: array
-#  parquet_path: D:\HG-temperature-control\temperature-control-simulink-models\simulink\datos_simulink.parquet
-#  column_name: CoolantTank
-#  function: minimizar
-#  description: Objetivo 3
+fObj3:
+  name: T_tank_out
+  type: results
+  data: array
+  parquet_path: D:\HG-temperature-control\temperature-control-simulink-models\simulink\datos_simulink.parquet
+  column_name: CoolantTank
+  function: minimizar
+  goal: RMSE
+  description: Objetivo 3
