@@ -7,14 +7,14 @@ with open("requirements.txt") as f:
 setup(
     name="idksim",
     version="0.1.0",
-    description="Orquestador de ROM, DOE, OPT y FEM",
+    description="Orquestador de ROM, DOE, OPTIMIZACION.",
     author="Ander Alvarez Sanz",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
     install_requires=[
         *requirements,
-        "idkfem @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkFEM.git@test-package",
+        #"idkfem @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkFEM.git@test-package",
         "idkrom @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@test-package",
         "idkdoe @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@test-package",
         "idkopt @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkopt.git@test-package",

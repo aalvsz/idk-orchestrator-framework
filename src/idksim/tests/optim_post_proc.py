@@ -35,6 +35,7 @@ def setup_logger(log_path):
 
     return logger
 
+
 def parse_solutions(txt_file):
     with open(txt_file, encoding="utf-8", errors="ignore") as f:
         lines = f.readlines()
