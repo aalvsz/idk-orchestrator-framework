@@ -154,8 +154,7 @@ def runIdkSIM(pathMain: str):
         n_workers = data['analysis']['params'].get('n_workers', 1)
         target_path = data['analysis']['params']['tracking']['path']
         output_file = os.path.join(target_path, "mem_usage.csv")
-        monitor = Process(target=monitor_memory, kwargs={"interval": 1.0, "output_file": output_file}, daemon=True)
-        monitor.start()
+        
         
         
         print("Selecciona una opción:")
