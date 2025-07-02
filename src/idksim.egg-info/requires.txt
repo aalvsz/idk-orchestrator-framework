@@ -31,6 +31,11 @@ gmsh==4.13.1
 grapheme==0.6.0
 h5py==3.14.0
 htmlmin==0.1.12
+idkDOE@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@46557db57296223536b32215b8e7ae5210e43c60
+idkfem@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkFEM.git@5ed01477ef7961e0b253c98e7abfe7b67b9e2b87
+idkOPT@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkopt.git@8459269b543ccc4a3892c6ad8c9958174c1ae4ec
+idkrom@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@aa5806fd0c99b68402d4633b164ce7c7e0358801
+idkSIM@ file:///D:/portable_idkSIM/idksimulation
 idna==3.10
 ImageHash==4.3.1
 intel-cmplr-lib-ur==2025.0.5
@@ -162,3 +167,7 @@ wrapt==1.17.2
 xlrd==2.0.1
 xlwings==0.33.14
 ydata-profiling==4.16.1
+idkfem@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkFEM.git@test-package
+idkrom@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@test-package
+idkdoe@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@test-package
+idkopt@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkopt.git@test-package
