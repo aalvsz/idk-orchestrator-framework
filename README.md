@@ -1,6 +1,9 @@
 # idkSIMULATION
 
+## Instrucciones 
+Descargarse el repositorio desde Gitlab.
 
+Una vez dentro, crear un entorno virtual, activarlo y ejecutar el siguiente comando en consola: "pip install ."
 
 ## Getting started
 
