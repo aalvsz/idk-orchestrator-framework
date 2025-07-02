@@ -1,15 +1,15 @@
-import src.idkSIM as idkSIM
+import idksim.idkSIM as idkSIM
 
 import os, sys, time
 start_time = time.time()
 
 def __test_idkFEM():
-    from src.tests.idkfem_engine import quick_run
+    from idksim.tests.idkfem_engine import quick_run
     quick_run()
 
 
 def __test_idkROM():
-    from src.tests.idkrom_engine import quick_run
+    from idksim.tests.idkrom_engine import quick_run
     quick_run()
 
 if __name__ == "__main__": # para parelizacion, es necesaria la estructura if __name__ == "__main__":

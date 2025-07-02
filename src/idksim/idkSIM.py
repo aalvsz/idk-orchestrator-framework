@@ -3,11 +3,11 @@ import yaml
 import plotly.io as pio
 from multiprocessing import Process
 pio.renderers.default = 'browser'
-from src.model import idksimObject
-from src.postprocessing import optimization_summary
-from src.parameters import Parameter
-from src.outputs import Output
-from src.profiling import monitor_memory
+from idksim.model import idksimObject
+from idksim.postprocessing import optimization_summary
+from idksim.parameters import Parameter
+from idksim.outputs import Output
+from idksim.profiling import monitor_memory
 
 # =============================================================================
 # Función principal runIdkSIM: Define la secuencia de la simulación/optimización

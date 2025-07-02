@@ -1,7 +1,0 @@
-README.md
-setup.py
-idkSIM.egg-info/PKG-INFO
-idkSIM.egg-info/SOURCES.txt
-idkSIM.egg-info/dependency_links.txt
-idkSIM.egg-info/requires.txt
-idkSIM.egg-info/top_level.txt

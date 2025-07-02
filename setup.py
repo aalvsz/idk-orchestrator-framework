@@ -5,11 +5,12 @@ with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
 setup(
-    name="idkSIM",
+    name="idksim",
     version="0.1.0",
     description="Orquestador de ROM, DOE, OPT y FEM",
     author="Ander Alvarez Sanz",
-    packages=find_packages(),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     include_package_data=True,
     install_requires=[
         *requirements,
