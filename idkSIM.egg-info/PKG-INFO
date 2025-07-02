@@ -156,6 +156,10 @@ Requires-Dist: wrapt==1.17.2
 Requires-Dist: xlrd==2.0.1
 Requires-Dist: xlwings==0.33.14
 Requires-Dist: ydata-profiling==4.16.1
+Requires-Dist: idkfem@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkFEM.git@test-package
+Requires-Dist: idkrom@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@test-package
+Requires-Dist: idkdoe@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@test-package
+Requires-Dist: idkopt@ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkopt.git@test-package
 Dynamic: author
 Dynamic: requires-dist
 Dynamic: requires-python

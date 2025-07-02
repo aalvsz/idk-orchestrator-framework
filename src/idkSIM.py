@@ -45,7 +45,7 @@ def runIdkSIM(pathMain: str):
         if data['analysis']['params']['algorithm'] == 'NSGA2':
 
             from idkopt.algorithms.mixed_var_genetic import MixedVariableGeneticProblem
-
+            
             problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs)
 
             res = problem.solve(resume=False if data['analysis']['state']=='new' else True, checkpoint_path=os.path.join(output_path, "genetic_alg_checkpoint.pkl"))

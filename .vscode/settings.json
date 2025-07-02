@@ -1,10 +1,4 @@
 {
     "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
-
-    "python.analysis.extraPaths": [
-      "D:/idk_framework/idkdoe",
-      "D:/idk_framework/idkopt",
-      "D:/idk_framework/idkROM"
-    ]
   }
   

@@ -13,10 +13,10 @@ setup(
     include_package_data=True,
     install_requires=[
         *requirements,
-        #"idkFEM @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkFEM.git@Integración-con-idkSIM",
-        #"idkROM @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@main",
-        #"idkDOE @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@main",
-        #"idkOPT @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkopt.git@main",
+        "idkfem @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkFEM.git@test-package",
+        "idkrom @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@test-package",
+        "idkdoe @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@test-package",
+        "idkopt @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkopt.git@test-package",
     ],
     python_requires=">=3.11",
 )

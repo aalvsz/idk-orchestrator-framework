@@ -3,13 +3,18 @@ import src.idkSIM as idkSIM
 import os, sys, time
 start_time = time.time()
 
-# hacer commit de idkFEM
-sys.path.insert(0, os.path.abspath(r"D:/idk_framework/idkFEM")) # para no tener que instalar idkFEM como paquete
+def __test_idkFEM():
+    from src.tests.idkfem_engine import quick_run
+    quick_run()
 
+
+def __test_idkROM():
+    from src.tests.idkrom_engine import quick_run
+    quick_run()
 
 if __name__ == "__main__": # para parelizacion, es necesaria la estructura if __name__ == "__main__":
 
-    idkSIM.runIdkSIM("yml/optim_idkROM.yml") 
+    #idkSIM.runIdkSIM("yml/optim_idkROM.yml") 
     #idkSIM.runIdkSIM("yml/hyperparameter_optim.yml")
     #idkSIM.runIdkSIM("yml/optim_idkFEM.yml")
     #idkSIM.runIdkSIM("yml/minimize_idkfem.yml")
@@ -19,6 +24,9 @@ if __name__ == "__main__": # para parelizacion, es necesaria la estructura if __
     #idkSIM.runIdkSIM("yml/optim_simulink.yml")
 
     #idkSIM.runIdkSIM("yml/optim_test.yml")
+
+    #__test_idkFEM()
+    __test_idkROM()
 
     total_time = time.time() - start_time
     print('Aplicación ejecutada correctamente')
