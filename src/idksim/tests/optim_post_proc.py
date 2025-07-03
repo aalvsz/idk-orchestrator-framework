@@ -120,5 +120,63 @@ def main():
 
     logger.info("✅ Proceso terminado correctamente.")
 
+def main2():
+    import csv
+    import re
+
+    # Cambia esto por la ruta real de tu archivo
+    input_file = r"D:\idk_framework\idksimulation\results\__ROM_travesano_peso_en_elastica\results.csv"
+    output_file = r"D:\idk_framework\idksimulation\results\__ROM_travesano_peso_en_elastica\soluciones_pareto_final.csv"
+
+    # lista de campos de entrada
+    input_fields = [
+        "t_front", "t_rear", "t_top", "t_bottom", "t_lateral",
+        "t1_long", "t2_long", "h_long", "t1_trans", "t2_trans",
+        "inc_t_trans", "d_t_trans", "K_trans", "ang_Z", "D", "N_trans"
+    ]
+
+    # lista de campos de salida (objetivos)
+    output_fields = ["Peso", "elastic_energy"]
+
+    # combinamos todos para el header
+    all_fields = input_fields + output_fields
+
+    # lista donde se guardarán las filas
+    rows = []
+
+    with open(input_file, "r") as f:
+        content = f.read()
+
+    # divide cada solución
+    solutions = re.split(r"--- Solución \d+ ---", content)
+
+    for sol in solutions:
+        if sol.strip() == "":
+            continue  # descarta textos vacíos
+        row = []
+        for field in input_fields:
+            match = re.search(rf"{field}:\s*([-+eE0-9\.]+)", sol)
+            if match:
+                row.append(float(match.group(1)))
+            else:
+                row.append(None)  # si falta, poner None
+        # objetivos
+        for field in output_fields:
+            match = re.search(rf"{field}:\s*([-+eE0-9\.]+)", sol)
+            if match:
+                row.append(float(match.group(1)))
+            else:
+                row.append(None)
+        rows.append(row)
+
+    # guardar en CSV
+    with open(output_file, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(all_fields)
+        writer.writerows(rows)
+
+    print(f"Archivo CSV generado correctamente con {len(rows)} filas en {output_file}")
+
+
 if __name__ == "__main__":
     main()

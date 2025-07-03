@@ -29,7 +29,7 @@ gitdb==4.0.12
 GitPython==3.1.44
 gmsh==4.13.1
 grapheme==0.6.0
-h5py==3.14.0
+#h5py==3.14.0
 htmlmin==0.1.12
 idna==3.10
 ImageHash==4.3.1
@@ -58,7 +58,7 @@ matlabengine==24.2.2
 matplotlib==3.10.0
 matplotlib-inline==0.1.7
 mdurl==0.1.2
-meshio==5.3.5
+#meshio==5.3.5
 mistune==3.1.3
 mkl==2025.0.1
 mpmath==1.3.0
@@ -92,7 +92,7 @@ pydantic_core==2.33.1
 pydeck==0.9.1
 Pygments==2.19.1
 pymoo==0.6.1.3
-pypardiso==0.4.6
+#pypardiso==0.4.6
 pyparsing==3.2.1
 python-dateutil==2.9.0.post0
 python-json-logger==3.3.0
@@ -111,7 +111,7 @@ rich==14.0.0
 rpds-py==0.24.0
 ruamel.yaml==0.18.10
 ruamel.yaml.clib==0.2.12
-scikit-fem==11.0.0
+#scikit-fem==11.0.0
 scikit-learn==1.6.1
 scipy==1.15.2
 seaborn==0.13.2
@@ -151,7 +151,7 @@ umf==0.9.1
 uri-template==1.3.0
 urllib3==2.3.0
 visions==0.8.1
-vtk==9.5.0
+#vtk==9.5.0
 watchdog==6.0.0
 wcwidth==0.2.13
 webcolors==24.11.1
