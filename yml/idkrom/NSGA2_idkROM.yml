@@ -164,8 +164,6 @@ D:
 
 fObj1:                       
   name: Peso
-  type: results
-  goal: /
   function: minimizar
   description: Minimizar el peso
 

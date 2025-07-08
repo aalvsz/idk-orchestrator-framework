@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 class Output:
     """
@@ -28,8 +29,11 @@ class Output:
         self.function = config.get("function", "minimizar").lower()
         self.description = config.get("description", "")
         self.sign = 1 if self.function == "minimizar" else -1
+
+
+
         self.data = config.get("data", "scalar")
-        self.goal = config.get("goal", "RMSE")
+        self.goal = config.get("goal", "")
         if self.data == 'array':
             self.parquet_path = config.get("parquet_path", None)
             self.column_name = config.get("column_name", None)
@@ -41,9 +45,18 @@ class Output:
     def transform(self, value):
         """
         Aplica la transformación necesaria al valor del objetivo.
-        Por ejemplo, en un problema de maximización se multiplica por -1 para convertirlo en minimización.
+        Si el valor es un array (por ejemplo, residuos), lo convierte a escalar
+        usando la suma de cuadrados. Luego aplica el signo (para minimizar o maximizar).
         """
-        return self.sign * value
+        if isinstance(value, (list, tuple, pd.Series)):
+            value = np.array(value)
+
+        if isinstance(value, np.ndarray):
+            # Por ejemplo: suma de cuadrados de los residuos
+            value = np.sum(value**2)
+
+        return self.sign * float(value)
+
 
     def __str__(self):
         return f"Output(name={self.name}, function={self.function}, description={self.description})"

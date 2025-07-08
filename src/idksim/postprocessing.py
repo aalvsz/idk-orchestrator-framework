@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt
 from pymoo.core.result import Result
 
 def optimization_summary(data, res, parameters, outputs, problem):
+    print("\n\n\n\n ################# POST-PROCESSING #################\n\n\n\n")
     print_optimization_summary(data, res, parameters, outputs)
     write_results_file(data, res, parameters, outputs, 'results.txt')
     if data['analysis']['params']['algorithm'] == 'NSGA2' or data['analysis']['params']['algorithm'] == 'NSGA3':
-        plot_pareto_and_dominated(data, res, outputs, nominal_point=(9821.927253772777, 1.320873466836539), plotly=True)
+        plot_pareto_and_dominated(data, res, outputs, plotly=True)
 
 
 def write_results_file(data, res, parameters: list, outputs: list, filename=None):
@@ -27,6 +28,7 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
 
     savefile = os.path.join(output_dir, filename)
 
+    # para NSGA
     if isinstance(res, Result):
         F = res.F
         X = res.X
@@ -72,8 +74,9 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
 
             print(f"Resultados guardados en: {savefile}")
 
+        # MULTIOBJETIVO - guardar frente de Pareto en CSV
         else:
-            # MULTIOBJETIVO - guardar frente de Pareto en CSV
+            
             savefile_csv = savefile.replace('.txt', '.csv')
             if os.path.isfile(savefile_csv): os.remove(savefile_csv)
             F = np.atleast_2d(F)
@@ -100,35 +103,37 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
                     f.write("\n")
             print(f"Frente de Pareto guardado en: {savefile_csv}")
 
+    # ------------------------------
+    # Caso Least Squares (scipy)
+    # ------------------------------
     else:
-        # Scalar minimize (scipy)
         savefile = savefile.replace('.txt', '_minimize.txt')
         with open(savefile, 'w') as f:
             f.write("=== MEJOR SOLUCIÓN ENCONTRADA ===\n\n")
             f.write("Parámetros:\n")
             for i, param in enumerate(parameters):
                 f.write(f"  {param.name}: {float(res.x_orig[i])}\n")
+
+            # Manejo robusto para mono o multi objetivo
             f.write("\nObjetivo:\n")
-            print("Raw objective value (res.fun):", float(res.fun))
-            print("Transformed value:", outputs[0].transform(float(res.fun)))
-            
-            if len(outputs) > 0:
-                f_opt_raw = float(res.fun)
-                f_opt_transf = outputs[0].transform(f_opt_raw)
-                f.write(f"  {outputs[0].name} (raw): {f_opt_raw}\n")
-                f.write(f"  {outputs[0].name} (transformed): {f_opt_transf}\n")
-            else:
-                f.write(f"  f: {float(res.fun)}\n")
+            f_vals = np.atleast_1d(res.fun)
 
+            for j, f_raw in enumerate(f_vals):
+                if j < len(outputs):
+                    f_trans = outputs[j].transform(f_raw)
+                    f.write(f"  {outputs[j].name} (raw): {f_raw}\n")
+                    f.write(f"  {outputs[j].name} (transformed): {f_trans}\n")
+                else:
+                    f.write(f"  f{j}: {f_raw}\n")
 
+            # Historial de evaluaciones si existe
             if hasattr(res, 'eval_history'):
                 f.write("\nHistorial de evaluaciones:\n")
                 for i, e in enumerate(res.eval_history):
-                    val = e['f_raw'][0] if isinstance(e['f_raw'], list) else e['f_raw']
-                    f.write(f"  {i}: {float(val)}\n")
+                    raw_vals = np.atleast_1d(e['f_raw'])
+                    f.write(f"  {i}: " + ", ".join([f"{float(v)}" for v in raw_vals]) + "\n")
 
         print(f"Resultados guardados en: {savefile}")
-
     return 0
 
 
@@ -136,49 +141,49 @@ def print_optimization_summary(data, res, parameters: list, outputs: list):
     print("\n🔎 RESUMEN DE LA OPTIMIZACIÓN")
     print("-" * 50)
 
+    from pymoo.core.result import Result
+    import numpy as np
 
+    # === Caso PYMOO (NSGA2/NSGA3)
     if isinstance(res, Result):
         n_gen = len(res.history)
         print(f"🧬 Generaciones totales: {n_gen}")
         total_inds = sum(len(algo.pop) for algo in res.history)
         print(f"👥 Individuos evaluados (en total): {total_inds}") 
 
-        """# --- Normalización segura ---
-        if isinstance(res.X, dict) and all(isinstance(v, dict) for v in res.X.values()):
-            values = list(res.X.values())
-            if all(val == values[0] for val in values[1:]):
-                X_list = [values[0]]  # Solo una solución única
-            else:
-                raise ValueError("Estructura incorrecta: múltiples valores distintos bajo X.keys()")
-        elif isinstance(res.X, dict):
-            X_list = [res.X]
-        elif isinstance(res.X, list) and all(isinstance(xi, dict) for xi in res.X):
-            X_list = res.X
-        else:
-            X = np.atleast_2d(res.X)
-            X_list = [dict(zip([p.name for p in parameters], xi)) for xi in X]"""
-
-
         X_list = list(res.X)
-
         print(f"🏁 Soluciones en el frente de Pareto: {len(X_list)}")
 
         for i, x in enumerate(X_list):
             print(f"\n--- Solución {i + 1} ---")
             for k, v in x.items():
-                print(f"  {k}: {v:.3f}")
-
+                print(f"  {k}: {v:.6f}")
 
             f_vals = res.F[i] if res.F.ndim > 1 else res.F
-            print("Objetivos:")
-            for j, raw in enumerate(np.atleast_1d(f_vals)):
+            f_vals = np.atleast_1d(f_vals)
+            print("🎯 Objetivos:")
+            for j, raw in enumerate(f_vals):
                 val = outputs[j].transform(raw)
-                print(f"{outputs[j].goal} {outputs[j].name}: {float(val):.3f}")
+                print(f"  {outputs[j].goal} {outputs[j].name}: {float(val):.6f}")
+
+    # === Caso Least Squares o Scalar Minimize (SciPy)
     else:
-        print("⚠️ Tipo de resultado no reconocido.")
+        print("📌 Tipo: SciPy minimize / least_squares")
+
+        print("\n--- Mejor solución ---")
+        for i, param in enumerate(parameters):
+            print(f"  {param.name}: {float(res.x_orig[i]):.6f}")
+
+        print("\n🎯 Objetivos:")
+        f_vals = np.atleast_1d(res.fun)
+        for j, f_raw in enumerate(f_vals):
+            if j < len(outputs):
+                f_trans = outputs[j].transform(f_raw)
+                print(f"  {outputs[j].goal} {outputs[j].name}: {f_trans:.6f}")
+            else:
+                print(f"  f{j}: {f_raw:.6f}")
 
     return 0
-
 
 
 def plot_pareto_and_dominated(data, res, outputs: list, nominal_point=None, plotly=False):

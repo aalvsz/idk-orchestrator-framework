@@ -1,0 +1,42 @@
+model:
+  pathModel: D:\idk_framework\idksimulation\objects\test_function_curve_fit.py
+  modelType: class
+  className: TestFunctionFitCurve
+
+analysis:
+  type: optimization
+  params:
+    algorithm: minimize
+    method: L-BFGS-B
+    variables: [a, b, c]
+    fObj: [curve_error]
+    weights: None
+    tracking:
+      path: D:\idk_framework\idksimulation\results\fit_curve
+    calculation:
+      parallel: false
+      nJobs: 1
+
+a:
+  name: a
+  default: 1.0
+  type: continuo
+  value interval: [0.0, 5.0]
+
+b:
+  name: b
+  default: 1.0
+  type: continuo
+  value interval: [0.0, 5.0]
+
+c:
+  name: c
+  default: 0.0
+  type: continuo
+  value interval: [-3.14, 3.14]
+
+curve_error:
+  name: curve_error
+  type: results
+  function: minimizar
+  description: Minimizar error entre la curva generada y la de referencia

@@ -97,5 +97,42 @@ def main():
     plt.show()
 
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def plot_outputs_from_csv(csv_file, output_path=None):
+    """
+    Lee un CSV con columnas 'Peso' y 'elastic_energy' y
+    hace un scatterplot de todas las filas.
+    """
+
+    # leer CSV
+    df = pd.read_csv(csv_file)
+    df = df[~(df["Peso"] <= 10)]
+
+    # verificar columnas
+    if not all(c in df.columns for c in ["Peso", "elastic_energy"]):
+        raise ValueError("El CSV debe tener columnas 'Peso' y 'elastic_energy'.")
+
+    # plot
+    plt.figure(figsize=(10,7))
+    plt.scatter(df["Peso"], df["elastic_energy"], c="blue", alpha=0.7, edgecolors="black", label="Resultados")
+
+    plt.xlabel("Peso [kg]")
+    plt.ylabel("Energía elástica [J]")
+    plt.title("Espacio de diseño (Peso vs. Energía elástica)")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    if output_path:
+        plt.savefig(output_path, dpi=300)
+        print(f"Gráfico guardado en {output_path}")
+    else:
+        plt.show()
+
+
 if __name__ == "__main__":
-    main()
+    #main()
+    csv_file = r"C:\Users\aalvarezsanz\OneDrive - DanobatGroup\Documentos\idk_framework\DOE_datos\Carga carro\outputs.csv"
+    plot_outputs_from_csv(csv_file, output_path=None)

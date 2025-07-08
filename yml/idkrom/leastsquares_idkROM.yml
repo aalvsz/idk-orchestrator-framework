@@ -1,20 +1,27 @@
 model:
-  aplication: idkDOE
-  pathAplication: []
-  pathModel: "objects/obj_HGP.pkl"
+  application: idkROM
+  pathApplication: []
+  pathModel: D:\idk_framework\idksimulation\objects\neural_network_object.pkl   # Ruta al archivo que contiene el ROM
   modelType: pickle
   className: None
 
 analysis:
-  type: doe
-  input_csv: "results/__doe_ander/DOE_inputs_LHS_part1_modified.csv"
+  type: optimization
+  state: new #new or resume
+
   params:
-    method: lhs
-    n_samples: 50000
-    n_configs: 4
-    chunks: [0.1, 0.1, 0.8]
-    parallel: true
-    n_workers: 4
+    seed: 20
+    algorithm: least squares
+    #method: L-BFGS-B
+    stopping_criteria:
+      max_iter_by_single_start: 100 # total number of iterations for the optimization process is >=this*nStarts*(n_vars+1) (suele sar mas, debido a line search que requiere varias llamadas adicionales a F)
+      max_iter_without_improvement: 20 # no usado
+      improvement_tolerance: 1.0e-3 # no usado
+      epsilon: 1.0e-1
+      ftol: 1.0e-3
+      gtol: 1.0e-3
+      disp: False
+    
     variables:
       [
         t_front, t_rear, t_top, t_bottom, t_lateral,
@@ -22,9 +29,18 @@ analysis:
         t1_trans, t2_trans, inc_t_trans, d_t_trans,
         K_trans, N_trans, ang_Z, D
       ]
+    fObj: [fObj1, fObj2]  # Objetivos a optimizar
+    weights: [0.5, 0.5] # o None para un peso de 1 a todos los objetivos
+
     tracking:
-      path: "results/new_DOE_Ander"
-      saveData: true
+      path: D:\idk_framework\idksimulation\results\least_squares_idkrom
+    calculation:
+      parallel: false
+      nJobs: 1 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
+
+
+################################################ VARIABLE DEFINITION ############################################################################
+
 
 t_front:
   name: t_front
@@ -137,3 +153,25 @@ D:
   type: continuo
   value interval: [0.400, 0.700]
   description: Diametro vaciado nervios (m)
+
+
+
+
+fObj1:                       
+  name: Peso
+  function: minimizar
+  description: Minimizar el peso
+
+fObj2:                        
+  name: TCP_B
+  type: results
+  goal: /
+  function: minimizar
+  description: Minimizar TCP_B
+
+fObj3:                        
+  name: elastic_energy
+  type: results
+  goal: /
+  function: minimizar
+  description: Minimizar elastic_energy

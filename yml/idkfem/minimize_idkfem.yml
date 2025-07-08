@@ -1,9 +1,8 @@
 ################################################ MODEL SETTINGS ############################################################################
 model:
   aplication: idkFEM             # Indicamos que usaremos el ROM
-  pathAplication: []          # Si no es necesario, se puede dejar vacío
+  pathAplication: []          # Si no es necesario, se puede dejar vacíos
   pathModel: objects/obj_Travesano_academic_st_static.pkl   # Ruta al archivo que contiene el ROM
-
 
 ################################################ ANALYSIS SETTINGS ############################################################################
 analysis:

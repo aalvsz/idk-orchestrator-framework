@@ -126,8 +126,6 @@ def runIdkSIM(pathMain: str):
             problem = Minimization(data, objModel, Parameter, Output)
             res = problem.solve()
             
-
-
         elif data['analysis']['params']['algorithm'] == 'least squares':
 
             from idkopt.algorithms.least_squares import LeastSquares
@@ -143,18 +141,18 @@ def runIdkSIM(pathMain: str):
             print(f"Error: {e}")
             traceback.print_exc()
 
+
     elif data['analysis']['type'] == 'doe':
 
-        from idkdoe.model import idkDOE
-        
+        #from idkdoe.model import idkDOE
+        from idkdoe import idkDOE
         problem = idkDOE(data, objModel)
         method = data['analysis']['params']['method'].upper()
         n_samples=data['analysis']['params'].get('n_samples', 10)
         parallel = data['analysis']['params'].get('parallel', False)
         n_workers = data['analysis']['params'].get('n_workers', 1)
         target_path = data['analysis']['params']['tracking']['path']
-        output_file = os.path.join(target_path, "mem_usage.csv")
-        
+      
         
         
         print("Selecciona una opción:")

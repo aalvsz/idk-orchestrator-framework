@@ -1,0 +1,63 @@
+model:
+  pathModel: D:\idk_framework\idksimulation\objects\test_function_least_squares.py   # Ruta al archivo que contiene el ROM
+  modelType: class
+  className: TestFunctionLeastSquares
+
+analysis:
+  type: optimization
+  state: new #new or resume
+
+  params:
+    seed: 58
+    algorithm: minimize
+    method: L-BFGS-B    
+    variables:
+      [
+        x1, x2
+      ]
+    fObj: [fObj1]  # Objetivos a optimizar
+    weights: None # o None para un peso de 1 a todos los objetivos
+
+    tracking:
+      path: D:\idk_framework\idksimulation\results\minimize_rosenbrock
+    calculation:
+      parallel: false
+      nJobs: 1 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
+
+
+################################################ VARIABLE DEFINITION ############################################################################
+x1:
+  name: x1
+  default: 1.0
+  type: continuo
+  value interval: [-5, 5]
+  description: Valor de x1
+
+x2:
+  name: x2
+  default: 1.0
+  type: continuo
+  value interval: [-5, 5]
+  description: Valor de x2
+
+x3:
+  name: x3
+  default: 1.0
+  type: continuo
+  value interval: [-5, 5]
+  description: Valor de x3
+
+x4:
+  name: x4
+  default: 1.0
+  type: continuo
+  value interval: [-5, 5]
+  description: Valor de x4
+
+fObj1:
+  name: rosen
+  type: results
+  parquet_path:
+  column_name:
+  function: minimizar
+  description: Minimizar la suma de residuos de Rosenbrock
