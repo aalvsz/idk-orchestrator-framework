@@ -1,0 +1,4 @@
+# Dependencias privadas desde Git (requiere IDKSIM_USER y IDKSIM_TOKEN)
+idkrom @ git+https://${IDKSIM_USER}:${IDKSIM_TOKEN}@kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@test-package
+idkdoe @ git+https://${IDKSIM_USER}:${IDKSIM_TOKEN}@kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@test-package
+idkopt @ git+https://${IDKSIM_USER}:${IDKSIM_TOKEN}@kodea.danobatgroup.com/dip/precision/ideko/simulation/idkopt.git@test-package
