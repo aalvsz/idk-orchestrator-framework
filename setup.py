@@ -2,16 +2,22 @@ from setuptools import setup, find_packages
 import os
 import sys
 
-def is_running_in_colab():
-    return 'google.colab' in sys.modules
+def detect_environment():
+    if 'google.colab' in sys.modules:
+        return 'colab'
+    elif 'ipykernel' in sys.modules and 'JPY_PARENT_PID' in os.environ:
+        return 'jupyter'
+    else:
+        return 'normal'
 
-# leer requirements.txt
+env = detect_environment()
+print(f"Se ha detectado este entorno: {env}")
+
 with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
-# Dependencias privadas solo si NO estamos en Colab
 extra_dependencies = []
-if not is_running_in_colab():
+if env == 'normal':
     extra_dependencies = [
         "idkrom @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkROM.git@test-package",
         "idkdoe @ git+https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idkdoe.git@test-package",
