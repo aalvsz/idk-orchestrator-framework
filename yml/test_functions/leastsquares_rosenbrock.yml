@@ -10,14 +10,25 @@ analysis:
   params:
     seed: 58
     algorithm: least squares
-    method: trf
-    stopping_criteria:
-      max_iter_without_improvement: 100 # no usado
-      improvement_tolerance: 1.0e-3 # no usado
-      epsilon: 1.0e-1
-      ftol: 1.0e-3
-      gtol: 1.0e-3
-      disp: False
+    method: trf                   # 'trf', 'dogbox', 'lm'
+    jac:
+      jac: custom # '2-point', '3-point', 'cs', custom o None
+      function: D:\idk_framework\idksimulation\objects\custom_jacobian.py
+      source: D:/idk_framework/idkjacobians/jacobian_data.csv                
+    x_scale: auto                # 'jac', 'auto', o lista de escalares
+    loss: soft_l1                # 'linear', 'soft_l1', 'huber', 'cauchy', 'arctan'
+    f_scale: 0.1                 # Escala del residuo, usado en funciones de pérdida robusta
+    verbose: 2                   # 0 (silencio), 1 (información básica), 2 (detallado)
+    max_nfev: 500                # Máx. número de evaluaciones de la función objetivo
+
+    # Argumentos adicionales opcionales
+    diff_step: null              # Paso para diferencias finitas (float o array)
+    tr_solver: exact             # 'exact' o 'lsmr' (solo para método 'trf')
+    tr_options:                  # Opciones para el trust region solver
+      regularize: True
+      factor: 100.0
+    jac_sparsity: null           # Matriz dispersa o estructura para Jacobiano (null si no se usa)
+
     
     variables:
       [
