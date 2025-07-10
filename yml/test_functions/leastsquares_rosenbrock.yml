@@ -12,7 +12,6 @@ analysis:
     algorithm: least squares
     method: trf
     stopping_criteria:
-      max_iter_by_single_start: 2000 # total number of iterations for the optimization process is >=this*nStarts*(n_vars+1) (suele sar mas, debido a line search que requiere varias llamadas adicionales a F)
       max_iter_without_improvement: 100 # no usado
       improvement_tolerance: 1.0e-3 # no usado
       epsilon: 1.0e-1

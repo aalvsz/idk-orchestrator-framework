@@ -1,0 +1,3 @@
+# Tipos
+
+::: idksim.outputs.Output

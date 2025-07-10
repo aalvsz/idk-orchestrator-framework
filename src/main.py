@@ -14,7 +14,7 @@ def __test_idkROM():
 
 if __name__ == "__main__": # para parelizacion, es necesaria la estructura if __name__ == "__main__":
     
-    idkSIM.runIdkSIM(r"D:\idk_framework\idksimulation\yml\test_functions\minimize_curvefit.yml")
+    idkSIM.runIdkSIM(r"D:\idk_framework\idksimulation\yml\test_functions\leastsquares_rosenbrock.yml")
 
     #__test_idkFEM()
     #__test_idkROM()

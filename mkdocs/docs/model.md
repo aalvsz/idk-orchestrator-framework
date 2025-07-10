@@ -1,0 +1,3 @@
+# Model
+
+::: idksim.model.idksimObject

@@ -15,13 +15,34 @@ from idksim.profiling import monitor_memory
 def runIdkSIM(pathMain: str):
     """
     Función principal de idkSIM.
-    Recibe como entrada el path del archivo YAML principal y ejecuta la
-    optimización usando un ROM y el algoritmo NSGA2.
+
+    Esta función orquesta la ejecución de simulaciones, optimizaciones y experimentos DOE
+    (Design of Experiments) usando modelos ROM y algoritmos de optimización como NSGA2, NSGA3,
+    minimize y least squares. Lee la configuración desde un archivo YAML, inicializa los objetos
+    necesarios y ejecuta el flujo correspondiente según el tipo de análisis especificado.
+
+    Args:
+        pathMain (str): Ruta al archivo YAML principal de configuración.
+
+    Flujo general:
+        1. Lee el archivo YAML de configuración.
+        2. Inicializa el modelo (idksimObject) y determina el tipo de análisis.
+        3. Si es optimización:
+            - Construye listas de parámetros y objetivos.
+            - Ejecuta el algoritmo de optimización seleccionado (NSGA2, NSGA3, minimize, least squares).
+            - Guarda los resultados y realiza post-procesamiento.
+        4. Si es DOE (Design of Experiments):
+            - Inicializa el objeto DOE y ejecuta el flujo interactivo para muestreo y evaluación.
+        5. Si es entrenamiento de ROM:
+            - Llama al pipeline de entrenamiento de idkROM.
+        6. Lanza errores si el tipo de análisis no está soportado.
+
+    Raises:
+        ValueError: Si el tipo de análisis especificado en el YAML no está soportado.
     """
     # 1) Leer el YAML
     with open(pathMain, 'r') as f:
         data = yaml.safe_load(f)
-
 
     # 3) Inicializar la clase model
     objModel = idksimObject(data)
@@ -40,7 +61,6 @@ def runIdkSIM(pathMain: str):
         outputs = []
         for f_key in data['analysis']['params']['fObj']:
             outputs.append(Output(data[f_key]))
-
 
         if data['analysis']['params']['algorithm'] == 'NSGA2':
 
@@ -133,7 +153,6 @@ def runIdkSIM(pathMain: str):
             problem = LeastSquares(data, objModel, Parameter, Output)
             res = problem.solve()
 
-
         try:
             optimization_summary(data, res, parameters, outputs, problem)
         except Exception as e:
@@ -141,9 +160,18 @@ def runIdkSIM(pathMain: str):
             print(f"Error: {e}")
             traceback.print_exc()
 
-
     elif data['analysis']['type'] == 'doe':
+        """
+        Ejecuta un experimento de diseño de experimentos (DOE) según la configuración YAML.
 
+        Permite al usuario elegir entre ejecutar el DOE completo, solo muestrear o ejecutar
+        a partir de un CSV ya generado. Soporta ejecución paralela y configuración de muestras.
+
+        Flujo:
+            - Inicializa el objeto DOE.
+            - Solicita al usuario la opción deseada.
+            - Ejecuta el método correspondiente del objeto DOE.
+        """
         #from idkdoe.model import idkDOE
         from idkdoe import idkDOE
         problem = idkDOE(data, objModel)
@@ -153,8 +181,6 @@ def runIdkSIM(pathMain: str):
         n_workers = data['analysis']['params'].get('n_workers', 1)
         target_path = data['analysis']['params']['tracking']['path']
       
-        
-        
         print("Selecciona una opción:")
         print("0 - Ejecutar DOE desde 0")
         print("1 - Ejecutar DOE ya sampleado")
@@ -191,9 +217,13 @@ def runIdkSIM(pathMain: str):
             problem.generate_samples(method=method, n_samples=n_samples)
             print("Solo se generaron las muestras. No se ejecutaron simulaciones.")
 
-
     elif data['analysis']['type'] == 'rom training':
-        
+        """
+        Ejecuta el pipeline de entrenamiento de un modelo ROM según la configuración YAML.
+
+        Inicializa el objeto idkROM y ejecuta el método de entrenamiento, mostrando la ruta
+        del modelo entrenado al finalizar.
+        """
         from idkrom.model import idkROM
         print(f"Este es el diccionario que se le va a pasar a idkROM: {data}.")
         rom = idkROM(data_dict=data)
@@ -202,6 +232,3 @@ def runIdkSIM(pathMain: str):
     
     else:
         raise ValueError(f"Tipo de análisis '{data['analysis']['type']}' no soportado.")
-
-
-    

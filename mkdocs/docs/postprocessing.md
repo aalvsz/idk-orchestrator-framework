@@ -1,0 +1,3 @@
+# Main workflow
+
+::: idksim.postprocessing

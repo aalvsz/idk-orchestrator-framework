@@ -4,6 +4,18 @@ import matplotlib.pyplot as plt
 from pymoo.core.result import Result
 
 def optimization_summary(data, res, parameters, outputs, problem):
+    """
+    Realiza el post-procesamiento principal de los resultados de optimización.
+
+    Imprime un resumen, guarda los resultados en archivos y genera gráficos de Pareto si corresponde.
+
+    Args:
+        data (dict): Diccionario de configuración y datos de la simulación.
+        res: Resultado de la optimización (puede ser un objeto Result de pymoo o resultado de scipy).
+        parameters (list): Lista de parámetros de entrada optimizados.
+        outputs (list): Lista de objetivos o salidas optimizadas.
+        problem: Objeto problema de optimización (no siempre usado).
+    """
     print("\n\n\n\n ################# POST-PROCESSING #################\n\n\n\n")
     print_optimization_summary(data, res, parameters, outputs)
     write_results_file(data, res, parameters, outputs, 'results.txt')
@@ -13,13 +25,23 @@ def optimization_summary(data, res, parameters, outputs, problem):
 
 def write_results_file(data, res, parameters: list, outputs: list, filename=None):
     """
-    Guarda resultados de optimización:
-    - Si `res` es un Result de pymoo:
-        - Si es monoobjetivo: guarda solo la mejor solución en un .txt
-        - Si es multiobjetivo: guarda el frente de Pareto completo en un .csv
-    - Si es scalar minimize: guarda la mejor solución en un .txt
-    """
+    Guarda los resultados de la optimización en archivos de texto o CSV.
 
+    - Si `res` es un objeto Result de pymoo:
+        - Monoobjetivo: guarda la mejor solución en un .txt.
+        - Multiobjetivo: guarda el frente de Pareto completo en un .csv.
+    - Si es resultado de scipy minimize: guarda la mejor solución en un .txt.
+
+    Args:
+        data (dict): Diccionario de configuración y datos de la simulación.
+        res: Resultado de la optimización (Result de pymoo o resultado de scipy).
+        parameters (list): Lista de parámetros de entrada optimizados.
+        outputs (list): Lista de objetivos o salidas optimizadas.
+        filename (str, opcional): Nombre base del archivo de salida.
+
+    Returns:
+        int: 0 si se guarda correctamente.
+    """
     if isinstance(res, Result) and len(outputs) == 0:
         raise ValueError("⚠️ La lista 'outputs' está vacía. No se pueden escribir los objetivos.")
 
@@ -45,7 +67,6 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
                 best_idx = int(np.argmin(F))
                 x_opt = X[best_idx]
                 f_opt = float(F[best_idx])
-
 
             with open(savefile, 'w') as f:
                 f.write("=== MEJOR SOLUCIÓN ENCONTRADA ===\n\n")
@@ -76,7 +97,6 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
 
         # MULTIOBJETIVO - guardar frente de Pareto en CSV
         else:
-            
             savefile_csv = savefile.replace('.txt', '.csv')
             if os.path.isfile(savefile_csv): os.remove(savefile_csv)
             F = np.atleast_2d(F)
@@ -138,6 +158,21 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
 
 
 def print_optimization_summary(data, res, parameters: list, outputs: list):
+    """
+    Imprime un resumen de los resultados de la optimización en consola.
+
+    Muestra información relevante como número de generaciones, individuos evaluados,
+    soluciones en el frente de Pareto y valores de los objetivos.
+
+    Args:
+        data (dict): Diccionario de configuración y datos de la simulación.
+        res: Resultado de la optimización (Result de pymoo o resultado de scipy).
+        parameters (list): Lista de parámetros de entrada optimizados.
+        outputs (list): Lista de objetivos o salidas optimizadas.
+
+    Returns:
+        int: 0 si se imprime correctamente.
+    """
     print("\n🔎 RESUMEN DE LA OPTIMIZACIÓN")
     print("-" * 50)
 
@@ -188,10 +223,18 @@ def print_optimization_summary(data, res, parameters: list, outputs: list):
 
 def plot_pareto_and_dominated(data, res, outputs: list, nominal_point=None, plotly=False):
     """
-    Dibuja el frente de Pareto y puntos dominados, en 2D con Matplotlib
-    o 3D con Plotly si plotly=True.
-    """
+    Dibuja el frente de Pareto y los puntos dominados, en 2D con Matplotlib
+    o en 3D con Plotly si plotly=True.
 
+    Args:
+        data (dict): Diccionario de configuración y datos de la simulación.
+        res: Resultado de la optimización (Result de pymoo).
+        outputs (list): Lista de objetivos o salidas optimizadas.
+        nominal_point (list, opcional): Punto nominal a destacar en el gráfico.
+        plotly (bool): Si True, genera un gráfico 3D interactivo con Plotly.
+
+    El gráfico se guarda en la carpeta de resultados correspondiente.
+    """
     from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
     from pymoo.core.result import Result
 
@@ -266,7 +309,6 @@ def plot_pareto_and_dominated(data, res, outputs: list, nominal_point=None, plot
                 marker=dict(size=6, color="red", symbol="diamond"),
                 name="Nominal"
             ))
-
 
         fig.update_layout(
             title="Frente de Pareto 3D",

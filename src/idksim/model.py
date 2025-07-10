@@ -4,7 +4,25 @@ import importlib.util
 import logging
 
 class idksimObject:
+    """
+    Clase para cargar y ejecutar modelos de simulación en idksimulation.
+
+    Permite cargar modelos guardados como archivos pickle o como clases Python,
+    y ejecutar su método `idk_run` con un diccionario de parámetros de entrada.
+    Incluye registro detallado de eventos y errores en un archivo de log.
+    """
+
     def __init__(self, data):
+        """
+        Inicializa el objeto idksimObject con la configuración y prepara el logger.
+
+        Args:
+            data (dict): Diccionario de configuración, debe incluir:
+                - data['model']['pathModel']: Ruta al archivo del modelo.
+                - data['model']['modelType']: Tipo de modelo ('pickle' o 'class').
+                - data['model']['className']: Nombre de la clase (si aplica).
+                - data['analysis']['params']['tracking']['path']: Ruta para guardar logs.
+        """
         self.pathModel = data['model']['pathModel']
         self.model_type = data['model']['modelType']
         self.class_name = data['model']['className']
@@ -36,6 +54,16 @@ class idksimObject:
         self.logger.info("Logger configurado correctamente")
 
     def load_model(self):
+        """
+        Carga el modelo desde archivo pickle o como clase Python, según la configuración.
+
+        Si el modelo es tipo 'pickle', lo carga usando pickle.
+        Si el modelo es tipo 'class', importa dinámicamente el módulo y crea una instancia de la clase.
+
+        Raises:
+            FileNotFoundError: Si el archivo del modelo no existe.
+            Exception: Si ocurre un error durante la carga.
+        """
         try:
             if self.pathModel is None or not os.path.isfile(self.pathModel):
                 raise FileNotFoundError(f"El archivo del modelo no existe: {self.pathModel}")
@@ -60,6 +88,21 @@ class idksimObject:
             raise
 
     def idk_run(self, input_dict):
+        """
+        Ejecuta el método `idk_run` del modelo cargado con los parámetros de entrada dados.
+
+        Si el modelo no está cargado, lo carga automáticamente antes de ejecutar.
+        Registra la ejecución y el resultado en el archivo de log.
+
+        Args:
+            input_dict (dict): Diccionario con los parámetros de entrada para el modelo.
+
+        Returns:
+            result: Resultado devuelto por el método `idk_run` del modelo.
+
+        Raises:
+            Exception: Si ocurre un error durante la ejecución.
+        """
         try:
             if self.model is None:
                 self.load_model()
