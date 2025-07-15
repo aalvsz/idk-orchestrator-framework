@@ -22,7 +22,7 @@ pip install "idkopt @ git+https://kodea.danobatgroup.com/dip/precision/ideko/sim
 2. Creamos un script simple como el siguiente:
 
 ```python
-from idksimulation.model import idkSIM
+from idksim.model import idkSIM
 
 sim = idkSIM(config_yml_path="path_a_tu_yaml.yml")
 sim.idk_run(dict_hyperparams={"population_size": 30, "generations": 50})
@@ -166,3 +166,118 @@ sim.idk_run({"population_size": 50})
 ```
 
 El valor original (`20`) será reemplazado por `50` en tiempo de ejecución.
+
+
+---
+
+## Usar clases como objetos
+
+En lugar de emplear un modelo externo (por ejemplo, Simulink), también puedes optimizar directamente una **clase de Python que actúe como modelo**. Esto es especialmente útil cuando:
+
+- Quieres probar o depurar la lógica de optimización sin depender de software externo.
+- Tienes un modelo físico, matemático o de machine learning implementado en Python.
+- Necesitas integrar modelos costosos o simulaciones personalizadas.
+
+---
+
+### Cómo definir una clase compatible con `idkSIM`
+
+Tu clase debe tener un método público llamado `idk_run()` con la siguiente estructura mínima:
+
+```python
+def idk_run(self, inputs: dict, **kwargs) -> dict:
+    ...
+```
+
+Este método recibe:
+
+- Un diccionario `inputs` con los valores de las variables definidas en tu archivo YAML.
+- Parámetros constantes adicionales vía `**kwargs`.
+
+Debe devolver un diccionario con las salidas u objetivos definidos en la sección `analysis → objectives` del YAML.
+
+---
+
+### Ejemplo: Ajuste de una parábola
+
+```python
+import numpy as np
+import time
+
+class TestFitParabolaLeastSquares:
+    """
+    Modelo de prueba para ajuste de una parábola.
+    
+    Ajusta parámetros a, b y c para aproximar la función: y = 2x² - 3x + 1
+    """
+
+    def __init__(self, simulate_costly=False, sleep_time=0.1):
+        self.simulate_costly = simulate_costly
+        self.sleep_time = sleep_time
+
+        # Datos de referencia (x, y)
+        self.x_data = np.linspace(-5, 5, 11)
+        self.y_target = 2 * self.x_data**2 - 3 * self.x_data + 1
+
+    def idk_run(self, inputs: dict, **kwargs) -> dict:
+        # Simular coste computacional si se desea
+        if self.simulate_costly:
+            time.sleep(self.sleep_time)
+
+        # Fusionar con constantes si se pasan por kwargs
+        if isinstance(kwargs, dict):
+            inputs = {**inputs, **kwargs}
+
+        # Extraer parámetros
+        a = inputs.get('a', 0.0)
+        b = inputs.get('b', 0.0)
+        c = inputs.get('c', 0.0)
+
+        # Evaluar modelo
+        y_model = a * self.x_data**2 + b * self.x_data + c
+
+        # Calcular residuos
+        residuals = y_model - self.y_target
+
+        return {'residuals': residuals}
+```
+
+---
+
+### ¿Qué tipo de modelos puedes integrar?
+
+El método `idk_run()` puede implementar cualquier tipo de lógica, incluyendo:
+
+- 📈 Funciones matemáticas (como una parábola, una función trigonométrica, etc.)
+- 🔬 Modelos físicos definidos por ecuaciones diferenciales o sistemas dinámicos
+- 🤖 Redes neuronales (PyTorch, TensorFlow, scikit-learn, etc.)
+- 🧠 Modelos de aprendizaje automático preentrenados
+- 👁️ Modelos de visión por computador que analicen imágenes o vídeos
+- 💡 Cualquier sistema que acepte variables de entrada y devuelva salidas a optimizar
+
+---
+
+### ¿Cómo se usa?
+
+Una vez creada la clase, la puedes registrar en tu YAML con:
+
+```yaml
+model:
+  application: Test
+  pathModel: documents\test_function_polynomial_lsq.py
+  modelType: class
+  className: TestFitParabolaLeastSquares
+```
+
+Luego, simplemente llama:
+
+```python
+from idksim.model import idkSIM
+
+sim = idkSIM(config_yml_path="tu_config.yml")
+sim.idk_run()
+```
+
+---
+
+Este enfoque es ideal para prototipar modelos personalizados y facilitar el desarrollo iterativo.

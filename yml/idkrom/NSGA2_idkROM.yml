@@ -1,6 +1,5 @@
 model:
   application: idkROM
-  pathApplication: []
   pathModel: objects/neural_network_object.pkl   # Ruta al archivo que contiene el ROM
   modelType: pickle
   className: None
@@ -36,9 +35,12 @@ analysis:
         t1_trans, t2_trans, inc_t_trans, d_t_trans,
         K_trans, N_trans, ang_Z, D
       ]
+    constants: [
+      
+    ]
     fObj: [fObj1, fObj2]  # Objetivos a optimizar
     tracking:
-      path: "results/test1"
+      path: "results/_test_nsga2_constantvars"
     calculation:
           parallel: False
           nJobs: 10 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
@@ -50,7 +52,7 @@ analysis:
 t_front:
   name: t_front
   default: 0.03
-  type: continuo
+  type: constante
   value interval: [0.015, 0.045]
   description: Espesor cara frontal (m)
 

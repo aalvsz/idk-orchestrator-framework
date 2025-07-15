@@ -1,0 +1,63 @@
+model:
+  application: Test
+  pathModel: D:\idk_framework\idksimulation\examples\optimisation\minimize\class_object\test_function_polynomial_lsq.py
+  modelType: class
+  className: TestFitParabolaLeastSquares
+
+analysis:
+  type: optimization
+  state: new #new or resume
+
+  params:
+    seed: 20
+    algorithm: minimize
+    method: L-BFGS-B
+    stopping_criteria:
+      max_iter_by_single_start: 1 # total number of iterations for the optimization process is >=this*nStarts*(n_vars+1) (suele sar mas, debido a line search que requiere varias llamadas adicionales a F)
+      max_iter_without_improvement: 3 # no usado
+      improvement_tolerance: 1e-3 # no usado
+      epsilon: 1e-1
+      ftol: 1e-3
+      gtol: 1e-3
+      disp: False
+    
+    variables: [a]
+    constants: [b, c]
+
+    fObj: [fObj1]  # Objetivos a optimizar
+    weights: None # o None para un peso de 1 a todos los objetivos
+
+    tracking:
+      path: D:\idk_framework\idksimulation\examples\optimisation\minimize\class_object\results
+    calculation:
+      parallel: false
+      nJobs: 1
+
+################################################ VARIABLE DEFINITION ################################################
+
+a:
+  name: a
+  default: 2.0
+  type: continuo
+  value interval: [-10, 10]
+  description: Coeficiente cuadrático
+
+b:
+  name: b
+  default: -3.0
+  type: constante
+  description: Coeficiente lineal
+
+c:
+  name: c
+  default: 1.0
+  type: constante
+  description: Término independiente
+
+fObj1:
+  name: residuals
+  type: results
+  parquet_path:
+  column_name:
+  function: minimizar
+  description: Minimizar la suma de los residuos (ajuste parabólico)

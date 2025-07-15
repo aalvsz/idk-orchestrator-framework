@@ -87,7 +87,7 @@ class idksimObject:
             self.logger.error(f"Error al cargar el modelo: {str(e)}")
             raise
 
-    def idk_run(self, input_dict):
+    def idk_run(self, input_dict, **kwargs):
         """
         Ejecuta el método `idk_run` del modelo cargado con los parámetros de entrada dados.
 
@@ -96,6 +96,7 @@ class idksimObject:
 
         Args:
             input_dict (dict): Diccionario con los parámetros de entrada para el modelo.
+            kwargs: Diccionario con variables constantes (opcional).
 
         Returns:
             result: Resultado devuelto por el método `idk_run` del modelo.
@@ -107,15 +108,20 @@ class idksimObject:
             if self.model is None:
                 self.load_model()
 
-            self.logger.info(f"Modelo ejecutado con los parámetros: {input_dict}")
-            print(f"Modelo ejecutado con los parámetros: {input_dict}")
+            log_msg = f"Modelo ejecutado con los parámetros: {input_dict}"
+            if 'kwargs':
+                log_msg += f" + constantes: {kwargs}"
+            
+            self.logger.info(log_msg)
+            print(log_msg)
 
-            result = self.model.idk_run(input_dict)
+            result = self.model.idk_run(input_dict, **kwargs)
 
             self.logger.info(f"Resultado del modelo: {result}")
             print(f"Resultado del modelo: {result}")
 
             return result
+
         except Exception as e:
             self.logger.error(f"Error en idk_run: {str(e)}")
             raise

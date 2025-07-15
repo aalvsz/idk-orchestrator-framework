@@ -1,0 +1,184 @@
+model:
+  application: idkROM
+  pathModel: D:\idk_framework\idksimulation\examples\optimisation\nsga2\pickle_object\neural_network_object.pkl   # Ruta al archivo que contiene el ROM
+  modelType: pickle
+  className: None
+
+analysis:
+  type: optimization
+  state: new #new or resume
+
+  params:
+    seed: 55
+    algorithm: NSGA2
+     # Se usará la rama de optimización con ROM
+    popSize: 5               # Tamaño de la población
+    nGen: 5 # Número de generaciones
+    settings: default
+    operators: 
+      crossover: # simulated binary crossover
+        prob: 0.9
+        eta: 15
+      mutation: # polynomial mutation
+        prob: 0.1
+        eta: 20
+      selection:
+        name: tournament # o random
+        n_parents: 2
+      sampling:
+        name: mixed_random
+    
+    variables:
+      [
+        t_front, t_rear, t_top, t_bottom, t_lateral,
+        t1_long, t2_long, h_long,
+        t1_trans, t2_trans, inc_t_trans, d_t_trans,
+        K_trans, N_trans, ang_Z, D
+      ]
+    constants: [
+      
+    ]
+    fObj: [fObj1, fObj2]  # Objetivos a optimizar
+    tracking:
+      path: D:\idk_framework\idksimulation\examples\optimisation\nsga2\pickle_object\results
+    calculation:
+          parallel: False
+          nJobs: 10 # numero de tareas a ejecutar en paralelo (cuantos nucleos de CPU usar al mismo tiempo)
+
+
+################################################ VARIABLE DEFINITION ############################################################################
+
+
+t_front:
+  name: t_front
+  default: 0.03
+  type: constante
+  value interval: [0.015, 0.045]
+  description: Espesor cara frontal (m)
+
+t_rear:
+  name: t_rear
+  default: 0.03
+  type: continuo
+  value interval: [0.010, 0.030]
+  description: Espesor cara trasera (m)
+
+t_top:
+  name: t_top
+  default: 0.03
+  type: continuo
+  value interval: [0.020, 0.045]
+  description: Espesor cara superior (m)
+
+t_bottom:
+  name: t_bottom
+  default: 0.03
+  type: continuo
+  value interval: [0.020, 0.045]
+  description: Espesor cara inferior (m)
+
+t_lateral:
+  name: t_lateral
+  default: 0.03
+  type: continuo
+  value interval: [0.020, 0.045]
+  description: Espesor cara lateral 1 (m)
+
+t1_long:
+  name: t1_long
+  default: 0.05
+  type: continuo
+  value interval: [0.010, 0.100]
+  description: Espesor central del nervio longitudinal (m)
+
+t2_long:
+  name: t2_long
+  default: 0.03
+  type: continuo
+  value interval: [0.010, 0.100]
+  description: Espesor lateral del nervio longitudinal (m)
+
+h_long:
+  name: h_long
+  default: 0.05
+  type: continuo
+  value interval: [0.010, 0.080]
+  description: Altura nervio longitudinal (m)
+
+t1_trans:
+  name: t1_trans
+  default: 0.030
+  type: continuo
+  value interval: [0.005, 0.040]
+  description: Espesor del nervio transversal central (m)
+
+t2_trans:
+  name: t2_trans
+  default: 0.030
+  type: continuo
+  value interval: [0.005, 0.040]
+  description: Espesor del nervio transversal lateral (m)
+
+inc_t_trans:
+  name: inc_t_trans
+  default: 0
+  type: continuo
+  value interval: [-0.9, 0.7]
+  description: Incremento en el espesor del punto intermedio respecto al valor medio en los extremos
+
+d_t_trans:
+  name: d_t_trans
+  default: 0.5
+  type: continuo
+  value interval: [0.1, 0.9]
+  description: Posicion del punto intermedio en modo relativo (-)
+
+K_trans:
+  name: K_trans
+  default: 1
+  type: continuo
+  value interval: [0.5, 1.5]
+  description: Constante dist. entre nervios (-)
+
+N_trans:
+  name: N_trans
+  default: 2
+  type: discreto
+  value interval: [1, 2, 3, 4, 5]
+  description: Numero de nervios por parte simetrica
+
+ang_Z:
+  name: ang_Z
+  default: 25
+  type: continuo
+  value interval: [0, 45]
+  description: Angulo orientacion Z (°)
+
+D:
+  name: D
+  default: 0.65
+  type: continuo
+  value interval: [0.400, 0.700]
+  description: Diametro vaciado nervios (m)
+
+
+
+
+fObj1:                       
+  name: Peso
+  function: minimizar
+  description: Minimizar el peso
+
+fObj2:                        
+  name: TCP_B
+  type: results
+  goal: /
+  function: minimizar
+  description: Minimizar TCP_B
+
+fObj3:                        
+  name: elastic_energy
+  type: results
+  goal: /
+  function: minimizar
+  description: Minimizar elastic_energy

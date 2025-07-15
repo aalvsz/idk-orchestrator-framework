@@ -1,0 +1,101 @@
+
+data:
+  input: C:\Users\aalvarezsanz\OneDrive - DanobatGroup\Documentos\idk_framework\DOE_datos\Carga carro\inputs.csv
+  output: C:\Users\aalvarezsanz\OneDrive - DanobatGroup\Documentos\idk_framework\DOE_datos\Carga carro\outputs.csv
+
+preprocess:
+  read mode: raw
+  preprocessed data path: None
+  validation mode: single # single to use X_val and y_val, cross for cross-validation
+  imputer: simple # simple, missing indicator or knn
+  scaler: minmax # minmax, standard or robust
+  filter method: isolation forest # isolation forest, lof (local outlier factor) or iqr (interquartile range)
+  test size: 0.10
+  validation size: 0.10
+
+
+evaluate:
+  output folder: D:\idk_framework\idksimulation\examples\neural_network_training\results
+  metrics: mse
+  
+model:
+  type: neural_network
+  discrete inputs: [N_trans]
+  hyperparams:
+    mode: manual
+    params:
+      n_layers: 2
+      n_neurons: 128
+      activation: ReLU
+      output activation:
+      dropout_rate: 0.1
+      optimizer: Adam
+      learning_rate: 0.001
+      lr_step: 200
+      lr_decrease_rate: 0.5
+      epochs: 1000
+      batch_size: 64
+      patience: 100
+      cv_folds: 5
+      convergence_threshold: 1e-09
+
+
+
+idk_params:
+
+  input_data: [data, input]
+  output_data: [data, output]
+  data_source: [preprocess, read mode]
+  validation_mode: [preprocess, validation mode]
+  imputer: [preprocess, imputer]
+  scaler: [preprocess, scaler]
+  filter_method: [preprocess, filter method]
+  test_size: [preprocess, test size]
+  validation_size: [preprocess, validation size]
+
+#neural network
+  n_capas: [model, hyperparams, params, n_layers]
+  n_neuronas: [model, hyperparams, params, n_neurons]
+  activation: [model, hyperparams, params, activation]
+  dropout_rate: [model, hyperparams, params, dropout_rate]
+  optimizer_nn: [model, hyperparams, params, optimizer]
+  lr: [model, hyperparams, params, learning_rate]
+  lr_step: [model, hyperparams, params, lr_step]
+  lr_decrease_rate: [model, hyperparams, params, lr_decrease_rate]
+  epochs: [model, hyperparams, params, epochs]
+  batch_size: [model, hyperparams, params, batch_size]
+  patience: [model, hyperparams, params, patience]
+  cv_folds: [model, hyperparams, params, cv_folds]
+  convergence_threshold: [model, hyperparams, params, convergence_threshold]
+
+#gaussian process
+  kernel_gp: [model, hyperparams, params, kernel]
+  constant_kernel: [model, hyperparams, params, constant_kernel]
+  matern_nu: [model, hyperparams, params, matern_nu]
+  expsine_periodicity: [model, hyperparams, params, expsine_periodicity]
+  alpha_gp: [model, hyperparams, params, alpha]
+  optimizer_gp: [model, hyperparams, params, optimizer]
+  n_restarts_optimizer: [model, hyperparams, params, n_restarts_optimizer]
+
+#rbf
+  alpha_rbf: [model, hyperparams, params, alpha]
+  kernel_rbf: [model, hyperparams, params, kernel]
+  gamma_rbf: [model, hyperparams, params, gamma]
+  degree_rbf: [model, hyperparams, params, degree]
+
+#response surface
+  degree_poly: [model, hyperparams, params, kernel]
+  interaction_only: [model, hyperparams, params, constant_kernel]
+  include_bias: [model, hyperparams, params, matern_nu]
+  order: [model, hyperparams, params, expsine_periodicity]
+  fit_intercept: [model, hyperparams, params, alpha]
+  positive: [model, hyperparams, params, positive]
+
+#svr
+  kernel_svr: [model, hyperparams, params, kernel]
+  degree_svr: [model, hyperparams, params, degree]
+  gamma_svr: [model, hyperparams, params, gamma]
+  tolerance: [model, hyperparams, params, tolerance]
+  C: [model, hyperparams, params, C]
+  epsilon: [model, hyperparams, params, epsilon]
+

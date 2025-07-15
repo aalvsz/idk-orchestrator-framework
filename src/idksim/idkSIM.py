@@ -54,9 +54,18 @@ def runIdkSIM(pathMain: str):
     if data['analysis']['type'] == 'optimization':
         #################### MOVER ESTO A IDKDOE E IDKOPT EN ESPECIAL??###############
         # 2) Construir listas de Parameter y Output
+        # Crear lista de parámetros variables (optimizables)
         parameters = []
         for key in data['analysis']['params']['variables']:
             parameters.append(Parameter(data[key]))
+
+        # Crear lista de parámetros constantes (no optimizables)
+        constant_parameters = []
+        for key in data['analysis']['params'].get('constants', []):
+            constant_parameters.append(Parameter(data[key]))
+
+        # Crear diccionario con nombre y valor por defecto de las constantes
+        constants_dict = {p.name: p.default for p in constant_parameters}
 
         outputs = []
         for f_key in data['analysis']['params']['fObj']:
@@ -66,9 +75,10 @@ def runIdkSIM(pathMain: str):
 
             from idkopt.algorithms.mixed_var_genetic import MixedVariableGeneticProblem
             
-            problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs)
+            problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs, kwargs=constants_dict)
 
-            res = problem.solve(resume=False if data['analysis']['state']=='new' else True, checkpoint_path=os.path.join(output_path, "genetic_alg_checkpoint.pkl"))
+            res = problem.solve(resume=False if data['analysis']['state']=='new' else True,
+                                checkpoint_path=os.path.join(output_path, "genetic_alg_checkpoint.pkl"))
 
             import dill
             with open(os.path.join(output_path, "resX.pkl"), "wb") as f:
@@ -143,14 +153,14 @@ def runIdkSIM(pathMain: str):
 
             from idkopt.algorithms.minimize import Minimization
 
-            problem = Minimization(data, objModel, Parameter, Output)
+            problem = Minimization(data, objModel, Parameter, Output, kwargs=constants_dict)
             res = problem.solve()
             
         elif data['analysis']['params']['algorithm'] == 'least squares':
 
             from idkopt.algorithms.least_squares import LeastSquares
 
-            problem = LeastSquares(data, objModel, Parameter, Output)
+            problem = LeastSquares(data, objModel, Parameter, Output, kwargs=constants_dict)
             res = problem.solve()
 
         try:
@@ -179,22 +189,8 @@ def runIdkSIM(pathMain: str):
         n_samples=data['analysis']['params'].get('n_samples', 10)
         parallel = data['analysis']['params'].get('parallel', False)
         n_workers = data['analysis']['params'].get('n_workers', 1)
-        target_path = data['analysis']['params']['tracking']['path']
-      
-        print("Selecciona una opción:")
-        print("0 - Ejecutar DOE desde 0")
-        print("1 - Ejecutar DOE ya sampleado")
-        print("2 - Samplear sin evaluar")
+        ejecutar_doe = data['analysis'].get('tipo de ejecucion', 0)
 
-        while True:
-            try:
-                ejecutar_doe = int(input("Introduce el número correspondiente (0, 1 o 2): ").strip())
-                if ejecutar_doe in [0, 1, 2]:
-                    break
-                else:
-                    print("Opción no válida. Por favor, introduce 0, 1 o 2.")
-            except ValueError:
-                print("Entrada inválida. Por favor, introduce un número.")
 
         if ejecutar_doe == 0:
             input_csv = data['analysis']['input_csv']

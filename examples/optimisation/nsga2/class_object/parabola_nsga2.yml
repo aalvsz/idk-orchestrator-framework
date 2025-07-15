@@ -1,0 +1,68 @@
+model:
+  application: Test
+  pathModel: D:\idk_framework\idksimulation\examples\optimisation\nsga2\class_object\test_function_polynomial_lsq.py
+  modelType: class
+  className: TestFitParabolaLeastSquares
+
+analysis:
+  type: optimization
+  state: new
+
+  params:
+    seed: 42
+    algorithm: NSGA2
+    popSize: 50
+    nGen: 10
+    settings: default
+    operators:
+      crossover:
+        prob: 0.9
+        eta: 15
+      mutation:
+        prob: 0.1
+        eta: 20
+      selection:
+        name: tournament
+        n_parents: 2
+      sampling:
+        name: mixed_random
+
+    variables: [a]
+    constants: [b, c]
+    fObj: [fObj1]
+    weights: None
+
+    tracking:
+      path: D:\idk_framework\idksimulation\examples\optimisation\nsga2\class_object\results
+    calculation:
+      parallel: false
+      nJobs: 1
+
+################################################ VARIABLE DEFINITION ################################################
+
+a:
+  name: a
+  default: 2.0
+  type: continuo
+  value interval: [-10, 10]
+  description: Coeficiente cuadrático
+
+b:
+  name: b
+  default: -4.0
+  type: constante
+  description: Coeficiente lineal
+
+c:
+  name: c
+  default: 1.0
+  type: constante
+  description: Término independiente
+
+fObj1:
+  name: residuals
+  type: results
+  parquet_path:
+  column_name:
+  function: minimizar
+  description: Minimizar la suma de los residuos (ajuste parabólico)

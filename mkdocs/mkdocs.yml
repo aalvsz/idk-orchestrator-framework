@@ -1,8 +1,10 @@
 site_name: idkSIMULATION Documentation
+repo_url: https://kodea.danobatgroup.com/dip/precision/ideko/simulation/idksimulation.git
+site_url: http://docs.dip.ideko.es/
+
 
 nav:
   - Home: index.md
-  - Description: descriptions.md
   - How to: main.md
   - Tipos: 
       - Parameters: parameters.md

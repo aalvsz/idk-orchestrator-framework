@@ -42,12 +42,13 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
     Returns:
         int: 0 si se guarda correctamente.
     """
+    from pymoo.core.result import Result
+
     if isinstance(res, Result) and len(outputs) == 0:
         raise ValueError("⚠️ La lista 'outputs' está vacía. No se pueden escribir los objetivos.")
 
     output_dir = data['analysis']['params']['tracking']['path']
     os.makedirs(output_dir, exist_ok=True)
-
     savefile = os.path.join(output_dir, filename)
 
     # para NSGA
@@ -59,14 +60,25 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
         if F.ndim == 1 or (F.ndim == 2 and F.shape[1] == 1):
             F = F.flatten()
 
-            # Caso especial: X es un único dict (una sola solución)
-            if isinstance(X, dict) and all(k in X for k in [p.name for p in parameters]):
-                x_opt = X
-                f_opt = float(F[0])  # solo hay un valor de función objetivo
+            if isinstance(X, dict) or isinstance(X, np.ndarray) or isinstance(X, list):
+                X_list = [X]
+            elif isinstance(X, str):
+                print(f"⚠️ 'res.X' es una cadena de texto: {X}. Esto no es válido.")
+                return 1
             else:
-                best_idx = int(np.argmin(F))
-                x_opt = X[best_idx]
-                f_opt = float(F[best_idx])
+                try:
+                    X_list = list(X)
+                except Exception as e:
+                    print(f"⚠️ No se pudo interpretar 'res.X'. Error: {e}")
+                    print(f"Contenido de res.X: {X}")
+                    return 1
+
+            F = np.atleast_2d(F)
+
+            # Identificamos el mejor índice (menor valor del primer objetivo)
+            best_idx = int(np.argmin(F[:, 0]))
+            x_opt = X_list[best_idx] if len(X_list) > best_idx else X_list[0]
+            f_opt = float(F[best_idx, 0]) if F.shape[1] > 0 else float(F[best_idx])
 
             with open(savefile, 'w') as f:
                 f.write("=== MEJOR SOLUCIÓN ENCONTRADA ===\n\n")
@@ -74,17 +86,23 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
                 if isinstance(x_opt, dict):
                     for k, v in x_opt.items():
                         f.write(f"  {k}: {v}\n")
-                else:
+                elif isinstance(x_opt, (list, tuple, np.ndarray)):
                     for i, param in enumerate(parameters):
                         f.write(f"  {param.name}: {float(x_opt[i])}\n")
+                else:
+                    f.write(f"  ⚠️ Tipo inesperado en x_opt: {type(x_opt)}\n")
+                    f.write(f"  Valor: {x_opt}\n")
+
                 f.write("\nObjetivo:\n")
                 if len(outputs) > 0:
-                    val = outputs[0].transform(f_opt)
-                    f.write(f"  {outputs[0].name}: {val}\n")
+                    try:
+                        val = outputs[0].transform(f_opt)
+                        f.write(f"  {outputs[0].name}: {val}\n")
+                    except Exception as e:
+                        f.write(f"  {outputs[0].name}: ERROR ({e})\n")
                 else:
                     f.write(f"  f: {f_opt}\n")
 
-                # Historial si existe
                 if hasattr(res, 'history'):
                     f.write("\nHistorial de evaluaciones (fitness):\n")
                     for gen, algo in enumerate(res.history):
@@ -107,9 +125,12 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
                     if isinstance(x, dict):
                         for name, val in x.items():
                             f.write(f"{name}: {val}\n")
-                    else:
+                    elif isinstance(x, (list, tuple, np.ndarray)):
                         for idx, param in enumerate(parameters):
                             f.write(f"{param.name}: {float(x[idx])}\n")
+                    else:
+                        f.write(f"⚠️ Tipo inesperado: {type(x)}\n")
+
                     f.write("Objetivos:\n")
                     for j, raw in enumerate(F[i]):
                         if j < len(outputs):
@@ -121,6 +142,7 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
                         else:
                             f.write(f"Objetivo {j}: {raw}\n")
                     f.write("\n")
+
             print(f"Frente de Pareto guardado en: {savefile_csv}")
 
     # ------------------------------
@@ -134,10 +156,8 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
             for i, param in enumerate(parameters):
                 f.write(f"  {param.name}: {float(res.x_orig[i])}\n")
 
-            # Manejo robusto para mono o multi objetivo
             f.write("\nObjetivo:\n")
             f_vals = np.atleast_1d(res.fun)
-
             for j, f_raw in enumerate(f_vals):
                 if j < len(outputs):
                     f_trans = outputs[j].transform(f_raw)
@@ -146,7 +166,6 @@ def write_results_file(data, res, parameters: list, outputs: list, filename=None
                 else:
                     f.write(f"  f{j}: {f_raw}\n")
 
-            # Historial de evaluaciones si existe
             if hasattr(res, 'eval_history'):
                 f.write("\nHistorial de evaluaciones:\n")
                 for i, e in enumerate(res.eval_history):
@@ -186,20 +205,58 @@ def print_optimization_summary(data, res, parameters: list, outputs: list):
         total_inds = sum(len(algo.pop) for algo in res.history)
         print(f"👥 Individuos evaluados (en total): {total_inds}") 
 
-        X_list = list(res.X)
-        print(f"🏁 Soluciones en el frente de Pareto: {len(X_list)}")
+        if data['model']['modelType'] == 'class':
+            X = res.X
 
-        for i, x in enumerate(X_list):
-            print(f"\n--- Solución {i + 1} ---")
-            for k, v in x.items():
-                print(f"  {k}: {v:.6f}")
+            if isinstance(X, dict) or isinstance(X, np.ndarray) or isinstance(X, list):
+                X_list = [X]  # lo envolvemos en una lista aunque sea 1 solo
+            elif isinstance(X, str):
+                print(f"⚠️ 'res.X' es una cadena de texto: {X}. Esto no es válido.")
+                return
+            else:
+                try:
+                    X_list = list(X)
+                except Exception as e:
+                    print(f"⚠️ No se pudo interpretar 'res.X'. Error: {e}")
+                    print(f"Contenido de res.X: {X}")
+                    return
 
-            f_vals = res.F[i] if res.F.ndim > 1 else res.F
-            f_vals = np.atleast_1d(f_vals)
-            print("🎯 Objetivos:")
-            for j, raw in enumerate(f_vals):
-                val = outputs[j].transform(raw)
-                print(f"  {outputs[j].goal} {outputs[j].name}: {float(val):.6f}")
+            print(f"🏁 Soluciones en el frente de Pareto: {len(X_list)}")
+
+            for i, x in enumerate(X_list):
+                print(f"\n--- Solución {i + 1} ---")
+                if isinstance(x, dict):
+                    for k, v in x.items():
+                        print(f"  {k}: {v:.6f}")
+                elif isinstance(x, (list, tuple, np.ndarray)):
+                    for j, param in enumerate(parameters):
+                        print(f"  {param.name}: {float(x[j]):.6f}")
+                else:
+                    print(f"  ⚠️ Tipo inesperado en solución {i+1}: {type(x)}")
+                    print(f"  Valor de x: {x}")
+
+                f_vals = res.F[i] if res.F.ndim > 1 else res.F
+                f_vals = np.atleast_1d(f_vals)
+                print("🎯 Objetivos:")
+                for j, raw in enumerate(f_vals):
+                    val = outputs[j].transform(raw)
+                    print(f"  {outputs[j].goal} {outputs[j].name}: {float(val):.6f}")
+        else:
+            X_list = list(res.X)
+            print(f"🏁 Soluciones en el frente de Pareto: {len(X_list)}")
+
+            for i, x in enumerate(X_list):
+                print(f"\n--- Solución {i + 1} ---")
+                for k, v in x.items():
+                    print(f"  {k}: {v:.6f}")
+
+                f_vals = res.F[i] if res.F.ndim > 1 else res.F
+                f_vals = np.atleast_1d(f_vals)
+                print("🎯 Objetivos:")
+                for j, raw in enumerate(f_vals):
+                    val = outputs[j].transform(raw)
+                    print(f"  {outputs[j].goal} {outputs[j].name}: {float(val):.6f}")
+
 
     # === Caso Least Squares o Scalar Minimize (SciPy)
     else:
@@ -219,6 +276,7 @@ def print_optimization_summary(data, res, parameters: list, outputs: list):
                 print(f"  f{j}: {f_raw:.6f}")
 
     return 0
+
 
 
 def plot_pareto_and_dominated(data, res, outputs: list, nominal_point=None, plotly=False):

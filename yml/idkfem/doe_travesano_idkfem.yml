@@ -7,12 +7,13 @@ model:
 
 analysis:
   type: doe
-  #input_csv: "results/__doe_ander/DOE_inputs_LHS_part1_modified.csv"
+  tipo de ejecucion: 0 # 0 = ejecutar DOE desde 0, 1 = ejecutar DOE ya sampleado con input_csv, 2 = samplear únicamente
+  input_csv: "results/__doe_ander/DOE_inputs_LHS_part1_modified.csv"
   params:
     method: lhs
     n_samples: 50000
-    n_configs: 3
-    chunks: [0.1, 0.1, 0.8]
+    n_configs: 1 # solo si sampleamos
+    chunks: [1] # proporciones de sampleo
     parallel: true
     n_workers: 3
     variables:

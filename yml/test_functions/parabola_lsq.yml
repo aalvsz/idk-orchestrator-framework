@@ -1,0 +1,70 @@
+model:
+  pathModel: D:\idk_framework\idksimulation\objects\test_function_polynomial_lsq.py  # Ruta al archivo con la clase
+  modelType: class
+  className: TestFitParabolaLeastSquares
+
+analysis:
+  type: optimization
+  state: new
+
+  params:
+    seed: 42
+    algorithm: least squares
+    method: trf                   # 'trf', 'dogbox', 'lm'
+    jac:
+      jac: 2-point                # Estimación del Jacobiano por diferencias finitas
+      function:
+      source:
+    x_scale: auto
+    loss: soft_l1
+    f_scale: 0.1
+    verbose: 2
+    max_nfev: 300
+
+    diff_step: null
+    tr_solver: exact
+    tr_options:
+      regularize: True
+      factor: 100.0
+    jac_sparsity: null
+
+    variables:
+      [a]
+    constants:
+      [b, c]
+    fObj: [fObj1]
+    weights: None
+
+    tracking:
+      path: D:\idk_framework\idksimulation\results\lsq_parabola
+    calculation:
+      parallel: false
+      nJobs: 1
+
+################################################ VARIABLE DEFINITION ################################################
+a:
+  name: a
+  default: 2.0
+  type: continuo
+  value interval: [-10, 10]
+  description: Coeficiente cuadrático
+
+b:
+  name: b
+  default: -3.0
+  type: constante
+  description: Coeficiente lineal
+
+c:
+  name: c
+  default: 1.0
+  type: constante
+  description: Término independiente
+
+fObj1:
+  name: residuals
+  type: results
+  parquet_path:
+  column_name:
+  function: minimizar
+  description: Minimizar la suma de los residuos (ajuste parabólico)

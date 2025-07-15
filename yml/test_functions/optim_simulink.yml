@@ -1,7 +1,7 @@
 model:
   application: Simulink
   pathAplication: []
-  pathModel: C:\Users\aalvarezsanz\OneDrive - DanobatGroup\Danobat Ideko Ing. proiektuak - Control de temperatura\temperature-control-simulink-models\simulink\parameter_optimizer.py
+  pathModel: C:\Users\aalvarezsanz\OneDrive - DanobatGroup\Danobat Ideko Ing. proiektuak - Control de temperatura\temperature-control-simulink-models\simulink\idkopt_use\parameter_optimizer.py
   modelType: class
   className: SimulinkModelRunner
 
