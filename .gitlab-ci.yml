@@ -123,7 +123,7 @@ build_docs:
   # - mkdir $DUMMY_FOLDER
   # - PROJECT_NAME_AUX=$( cat project-name.txt)
   # - mv site "$DUMMY_FOLDER/$PROJECT_NAME_AUX"
-  - mv site $CI_PROJECT_NAME
+  - mv mkdocs/site $CI_PROJECT_NAME
   artifacts:
     paths:
     # Asier
