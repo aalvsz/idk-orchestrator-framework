@@ -117,7 +117,7 @@ build_docs:
   # plugin para indicar fecha de ediciÃ³n en cada pagina
   - pip install mkdocs-git-revision-date-localized-plugin
   - ls -R
-  - mkdocs build
+  - mkdocs build --config-file mkdocs/mkdocs.yml
   # Asier
   # Crear la carpeta dummy y guardar dentro "site", que es la carpeta creada por mkdocs build, pero con el nombre custom dado por el fichero "project-name.txt" del repo
   # - mkdir $DUMMY_FOLDER
