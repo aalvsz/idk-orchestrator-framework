@@ -4,7 +4,6 @@ site_url: http://docs.dip.ideko.es/
 
 
 nav:
-  - Home: index.md
   - How to: main.md
   - Tipos: 
       - Parameters: parameters.md
