@@ -1,4 +1,5 @@
 import os
+from idkrom.model import idkROM
 import yaml
 import plotly.io as pio
 from multiprocessing import Process
@@ -222,9 +223,9 @@ def runIdkSIM(pathMain: str):
         """
         from idkrom.model import idkROM
         print(f"Este es el diccionario que se le va a pasar a idkROM: {data}.")
-        rom = idkROM(data_dict=data)
-        model_path = rom.rom_training_pipeline(data)
-        print(f"Este es el path del modelo: {model_path}.")
-    
+        config_yml_filepath = data['analysis']['config_yaml_filepath']
+        random_state = data['analysis'].get('random_state', 89)
+        idkROM(random_state=random_state, config_yml_path=config_yml_filepath).run_idkROM()
+
     else:
         raise ValueError(f"Tipo de análisis '{data['analysis']['type']}' no soportado.")
