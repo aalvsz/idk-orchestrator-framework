@@ -95,7 +95,7 @@ def runIdkSIM(pathMain: str):
             from pymoo.optimize import minimize
 
             # Inicializar el problema de optimización definido en la clase opt_genalg
-            problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs)
+            problem = MixedVariableGeneticProblem(data, objModel, parameters, outputs, kwargs=constants_dict)
 
             # Número de objetivos
             n_dim = len(outputs)
